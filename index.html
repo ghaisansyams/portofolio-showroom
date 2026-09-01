@@ -79,6 +79,11 @@ canvas#scene{position:fixed;inset:0;display:block;width:100%;height:100%}
   font-family:var(--display);font-weight:800;font-size:23px;
   letter-spacing:-.025em;margin:0;line-height:1.05;
 }
+.focus .shots{
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  color:var(--ink-dim);border:1px solid var(--line);padding:3px 7px;
+}
+.focus .shots:empty{display:none}
 .focus .kind{
   font-size:9px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
   color:var(--ground);background:var(--proj);padding:3px 7px;
@@ -109,7 +114,47 @@ kbd{
   background:var(--panel);border:3px solid var(--ink);
   box-shadow:10px 10px 0 var(--proj);
 }
-.card .shot{display:block;width:100%;aspect-ratio:16/8;object-fit:cover;object-position:top;background:var(--panel-hi);border-bottom:3px solid var(--ink)}
+.gal{position:relative;background:var(--panel-hi);border-bottom:3px solid var(--ink)}
+.card .shot{display:block;width:100%;aspect-ratio:16/10;object-fit:contain;background:var(--panel-hi)}
+.gal .nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(27,23,38,.78);border:2px solid var(--line);
+  color:var(--ink);font-size:16px;cursor:pointer;
+  display:grid;place-items:center;padding:0;
+  opacity:.55;transition:opacity .18s ease,background .18s ease;
+}
+.gal:hover .nav,.gal .nav:focus-visible{opacity:1}
+.gal .nav:hover{background:var(--proj);color:#17131f}
+.gal .nav:focus-visible{outline:3px solid var(--gold-hot);outline-offset:2px}
+.gal .prev{left:10px}
+.gal .next{right:10px}
+.gal[data-single="1"] .nav,.gal[data-single="1"] .gcount{display:none}
+.galbar{
+  position:absolute;left:0;right:0;bottom:0;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:22px 14px 9px;
+  background:linear-gradient(to top, rgba(23,19,31,.92), rgba(23,19,31,0));
+  pointer-events:none;
+}
+.glabel{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:-.01em;color:var(--ink)}
+.gcount{font-size:11px;color:var(--ink-dim);font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.thumbs{
+  display:flex;gap:7px;padding:11px 14px;overflow-x:auto;
+  border-bottom:3px solid var(--ink);background:var(--panel);
+  scrollbar-width:thin;
+}
+.thumbs:empty,.thumbs[hidden]{display:none}
+.thumbs button{
+  flex:0 0 auto;width:84px;height:53px;padding:0;cursor:pointer;
+  border:2px solid var(--line);background:var(--panel-hi);
+  overflow:hidden;position:relative;opacity:.62;
+  transition:opacity .16s ease,border-color .16s ease;
+}
+.thumbs button img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.thumbs button:hover{opacity:.9}
+.thumbs button[aria-current="true"]{opacity:1;border-color:var(--proj)}
+.thumbs button:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
 .card .body{padding:24px 26px 26px}
 .eyebrow{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--proj);font-weight:700;margin:0 0 10px}
 .card h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5.2vw,40px);line-height:.98;letter-spacing:-.035em;margin:0 0 8px;text-wrap:balance}
@@ -175,6 +220,8 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   .focus h2{font-size:19px}
   .focus .cue{display:none}
   .card .body{padding:20px}
+  .gal .nav{opacity:1;width:34px;height:34px}
+  .thumbs button{width:68px;height:43px}
 }
 </style>
 </head>
@@ -200,6 +247,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   <div class="top">
     <h2 id="fName">—</h2>
     <span class="kind" id="fKind">Proyek</span>
+    <span class="shots" id="fShots"></span>
   </div>
   <p class="tag" id="fTag"></p>
   <div class="cue"><kbd>E</kbd> lihat detail</div>
@@ -238,7 +286,16 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
 
 <div class="veil" id="veilDetail" hidden>
   <div class="card">
-    <img class="shot" id="dShot" alt="">
+    <div class="gal" id="dGal">
+      <img class="shot" id="dShot" alt="">
+      <button class="nav prev" id="dPrev" type="button" aria-label="Foto sebelumnya">&#8592;</button>
+      <button class="nav next" id="dNext" type="button" aria-label="Foto berikutnya">&#8594;</button>
+      <div class="galbar">
+        <span class="glabel" id="dLabel"></span>
+        <span class="gcount" id="dCount"></span>
+      </div>
+    </div>
+    <div class="thumbs" id="dThumbs"></div>
     <div class="body">
       <p class="eyebrow" id="dKind">Proyek</p>
       <h1 id="dName">—</h1>
@@ -503,19 +560,31 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     edge.castShadow = true;
     g.add(edge);
 
-    // screenshot — starts as the tiny blur placeholder from the portfolio data
-    var mat = new THREE.MeshStandardMaterial({
-      color: 0xffffff, roughness: 0.95, metalness: 0,
-      emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.34
-    });
+    // Screenshot layer. Projects with several shots cycle through them while
+    // focused, so this is two stacked planes: matA holds the current shot, matB
+    // fades the next one in on top. Both start on the tiny blur placeholder.
+    function shotMat() {
+      return new THREE.MeshStandardMaterial({
+        color: 0xffffff, roughness: 0.95, metalness: 0,
+        emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.34
+      });
+    }
+    var matA = shotMat(), matB = shotMat();
+    matB.transparent = true; matB.opacity = 0; matB.depthWrite = false;
     if (p.blur) {
       var bt = new THREE.TextureLoader().load(p.blur);
       bt.encoding = THREE.sRGBEncoding;
-      mat.map = bt; mat.emissiveMap = bt;
+      matA.map = bt; matA.emissiveMap = bt;
     }
-    var shot = new THREE.Mesh(new THREE.PlaneGeometry(IW, IH), mat);
-    shot.position.set(0, base + pad + LH + IH / 2, 0.18);
-    g.add(shot);
+    var planeGeo = new THREE.PlaneGeometry(IW, IH);
+    var shotY = base + pad + LH + IH / 2;
+    var shotA = new THREE.Mesh(planeGeo, matA);
+    shotA.position.set(0, shotY, 0.18);
+    var shotB = new THREE.Mesh(planeGeo, matB);
+    shotB.position.set(0, shotY, 0.192);
+    shotB.renderOrder = 1;
+    shotB.visible = false; // only shown mid-crossfade; see updateBoards
+    g.add(shotA, shotB);
 
     var lt = labelTexture(p, big);
     var label = new THREE.Mesh(new THREE.PlaneGeometry(IW, LH),
@@ -553,8 +622,10 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     var stand = new THREE.Vector3().copy(g.position).addScaledVector(normal, 7.5);
 
     var b = {
-      p: p, group: g, shot: shot, mat: mat, edge: edge, label: label,
-      stand: stand, baseY: 0, glow: 0, visited: false, loaded: false
+      p: p, group: g, matA: matA, matB: matB, shotB: shotB, edge: edge, label: label,
+      stand: stand, glow: 0, visited: false,
+      baseTex: null, gallery: null, galLoading: false,
+      shotI: 0, nextI: 0, timer: 0, fade: 0, fading: false, dwell: 0
     };
     boards.push(b);
     if (p.image) texQueue.push(b);
@@ -603,36 +674,130 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   // and stay current without re-running the sync script. They are downscaled on
   // the way in: 31 full-size shots would cost ~150 MB of GPU memory.
   var MAXW = 512, inflight = 0;
+  function loadShotTexture(src, done) {
+    var img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = function () {
+      try {
+        var w = Math.min(MAXW, img.naturalWidth);
+        var h = Math.round(w * img.naturalHeight / img.naturalWidth);
+        var cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        var g = cv.getContext("2d");
+        g.imageSmoothingQuality = "high";
+        g.drawImage(img, 0, 0, w, h);
+        var t = new THREE.CanvasTexture(cv);
+        t.encoding = THREE.sRGBEncoding;
+        t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+        done(t);
+      } catch (e) { done(null); }
+    };
+    img.onerror = function () { done(null); };
+    img.src = src;
+  }
+  function setBoardTex(b, t) {
+    b.matA.map = t; b.matA.emissiveMap = t; b.matA.needsUpdate = true;
+  }
   function pump() {
     while (inflight < 3 && texQueue.length) {
       (function (b) {
         inflight++;
-        var img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = function () {
+        loadShotTexture(b.p.image, function (t) {
           inflight--;
-          try {
-            var w = Math.min(MAXW, img.naturalWidth);
-            var h = Math.round(w * img.naturalHeight / img.naturalWidth);
-            var cv = document.createElement("canvas"); cv.width = w; cv.height = h;
-            var g = cv.getContext("2d");
-            g.imageSmoothingQuality = "high";
-            g.drawImage(img, 0, 0, w, h);
-            var t = new THREE.CanvasTexture(cv);
-            t.encoding = THREE.sRGBEncoding;
-            t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-            if (b.mat.map) b.mat.map.dispose();
-            b.mat.map = t; b.mat.emissiveMap = t; b.mat.needsUpdate = true;
-            b.loaded = true;
-          } catch (e) { /* keep the blur placeholder */ }
+          if (t) {
+            if (b.matA.map) b.matA.map.dispose();
+            b.baseTex = t;
+            if (!b.gallery) setBoardTex(b, t);
+          }
           pump();
-        };
-        img.onerror = function () { inflight--; pump(); };
-        img.src = b.p.image;
+        });
       })(texQueue.shift());
     }
   }
   pump();
+
+  // The 80 screenshots would cost roughly 70 MB of GPU memory if every gallery
+  // stayed resident, so only the two most recently read projects keep theirs;
+  // the rest fall back to their single cover shot.
+  var GAL_KEEP = 2, galLRU = [];
+  function dropGallery(b) {
+    if (!b.gallery) return;
+    for (var i = 0; i < b.gallery.length; i++) {
+      if (b.gallery[i] && b.gallery[i] !== b.baseTex) b.gallery[i].dispose();
+    }
+    b.gallery = null;
+    resetBoardShot(b);
+  }
+  function trimGalleries() {
+    var guard = galLRU.length;
+    while (galLRU.length > GAL_KEEP && guard-- > 0) {
+      var old = galLRU.shift();
+      if (old === focused) { galLRU.push(old); continue; } // never evict what is on screen
+      dropGallery(old);
+    }
+  }
+  function ensureGallery(b) {
+    if (b.gallery || b.galLoading || !b.baseTex || (b.p.shots || []).length < 2) return;
+    b.galLoading = true;
+    var shots = b.p.shots, out = new Array(shots.length), left = shots.length - 1;
+    out[0] = b.baseTex;
+    for (var i = 1; i < shots.length; i++) {
+      (function (idx) {
+        loadShotTexture(shots[idx].src, function (t) {
+          out[idx] = t;
+          if (--left === 0) {
+            b.gallery = out.filter(Boolean);
+            b.galLoading = false;
+            galLRU.push(b);
+            trimGalleries();
+          }
+        });
+      })(i);
+    }
+  }
+
+  // ---------------------------------------------------------------- cycling
+  var HOLD = 2.8, FADE = 0.6;
+  function resetBoardShot(b) {
+    var t = b.gallery ? b.gallery[0] : b.baseTex;
+    if (t) setBoardTex(b, t);
+    b.matB.opacity = 0;
+    b.shotB.visible = false;
+    b.shotI = 0; b.timer = 0; b.fade = 0; b.fading = false;
+  }
+  function updateBoards(dt) {
+    for (var i = 0; i < boards.length; i++) {
+      var b = boards[i];
+      if (b !== focused) {
+        if (b.shotI !== 0 || b.fading) resetBoardShot(b);
+        continue;
+      }
+      // a short dwell keeps a drive-by from kicking off a gallery download
+      b.dwell += dt;
+      if (b.dwell > 1.2) ensureGallery(b);
+      var tex = b.gallery;            // not `gal` -- that name is the detail-sheet gallery
+      if (!tex || tex.length < 2) continue;
+      if (b.fading) {
+        b.fade += dt / FADE;
+        if (b.fade >= 1) {
+          setBoardTex(b, b.matB.map);
+          b.matB.opacity = 0;
+          b.shotB.visible = false;
+          b.fading = false; b.timer = 0; b.shotI = b.nextI;
+        } else {
+          b.matB.opacity = b.fade;
+        }
+      } else {
+        b.timer += dt;
+        if (b.timer > HOLD) {
+          b.nextI = (b.shotI + 1) % tex.length;
+          b.matB.map = tex[b.nextI];
+          b.matB.emissiveMap = tex[b.nextI];
+          b.matB.needsUpdate = true;
+          b.fade = 0; b.matB.opacity = 0; b.shotB.visible = true; b.fading = true;
+        }
+      }
+    }
+  }
 
   // Canvas text is measured with whatever font is ready at draw time, so the
   // nameplates are redrawn once the webfont actually lands.
@@ -828,6 +993,10 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   }
   window.addEventListener("keydown", function (e) {
     if (isDriveKey(e.code) || e.code === "Space") e.preventDefault();
+    if (phase === "detail") {
+      if (e.code === "ArrowLeft") { showShot(gal.i - 1); return; }
+      if (e.code === "ArrowRight") { showShot(gal.i + 1); return; }
+    }
     keys[e.code] = true;
     if (e.code === "KeyR") respawn();
     if (e.code === "KeyE") toggleDetail();
@@ -947,6 +1116,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     if (best !== focused) {
       focused = best;
       if (focused) {
+        focused.dwell = 0;
         if (!focused.visited) {
           focused.visited = true;
           seen++;
@@ -968,7 +1138,8 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
         bd.glow += (target - bd.glow) * Math.min(1, dt * 6);
         if (Math.abs(bd.glow - target) < 0.005) bd.glow = target;
         bd.group.position.y = bd.glow * 0.34;
-        bd.mat.emissiveIntensity = 0.34 + bd.glow * 0.42;
+        bd.matA.emissiveIntensity = 0.34 + bd.glow * 0.42;
+        bd.matB.emissiveIntensity = bd.matA.emissiveIntensity;
         bd.edge.material.emissive.copy(bd.edge.material.color);
         bd.edge.material.emissiveIntensity = bd.glow * 0.55;
       }
@@ -983,7 +1154,69 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     document.getElementById("fName").textContent = p.name;
     document.getElementById("fKind").textContent = kindLabel(p);
     document.getElementById("fTag").textContent = p.tagline || p.description || "";
+    var nsh = (p.shots || []).length;
+    document.getElementById("fShots").textContent = nsh > 1 ? nsh + " foto" : "";
   }
+
+  // ---------------------------------------------------------------- gallery
+  var gal = { shots: [], i: 0, name: "" };
+  var dGal = document.getElementById("dGal"), dShot = document.getElementById("dShot"),
+      dLabel = document.getElementById("dLabel"), dCount = document.getElementById("dCount"),
+      dThumbs = document.getElementById("dThumbs");
+
+  function showShot(i) {
+    if (!gal.shots.length) return;
+    gal.i = (i + gal.shots.length) % gal.shots.length;
+    var sh = gal.shots[gal.i];
+    dShot.src = sh.src;
+    dShot.alt = gal.name + " — " + sh.label;
+    dLabel.textContent = sh.label;
+    dCount.textContent = (gal.i + 1) + " / " + gal.shots.length;
+    for (var n = 0; n < dThumbs.children.length; n++) {
+      dThumbs.children[n].setAttribute("aria-current", n === gal.i ? "true" : "false");
+    }
+    // keep the active thumb in view by nudging the strip, not scrollIntoView,
+    // which would also scroll the sheet behind it
+    var act = dThumbs.children[gal.i];
+    if (act) {
+      var l = act.offsetLeft, r = l + act.offsetWidth;
+      if (l < dThumbs.scrollLeft) dThumbs.scrollLeft = l - 8;
+      else if (r > dThumbs.scrollLeft + dThumbs.clientWidth) dThumbs.scrollLeft = r - dThumbs.clientWidth + 8;
+    }
+  }
+
+  function initGallery(p) {
+    gal.shots = (p.shots || []).slice();
+    gal.name = p.name;
+    gal.i = 0;
+    dThumbs.innerHTML = "";
+    var many = gal.shots.length > 1;
+    dGal.setAttribute("data-single", many ? "0" : "1");
+    dThumbs.hidden = !many;
+    if (many) {
+      gal.shots.forEach(function (sh, idx) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.title = sh.label;
+        btn.setAttribute("aria-label", "Lihat " + sh.label);
+        if (sh.blur) {
+          btn.style.backgroundImage = "url(" + sh.blur + ")";
+          btn.style.backgroundSize = "cover";
+          btn.style.backgroundPosition = "top";
+        }
+        var im = document.createElement("img");
+        im.alt = ""; im.src = sh.src;
+        btn.appendChild(im);
+        btn.addEventListener("click", function () { showShot(idx); });
+        dThumbs.appendChild(btn);
+      });
+    }
+    dThumbs.scrollLeft = 0;
+    showShot(0);
+  }
+
+  document.getElementById("dPrev").addEventListener("click", function () { showShot(gal.i - 1); });
+  document.getElementById("dNext").addEventListener("click", function () { showShot(gal.i + 1); });
 
   // ---------------------------------------------------------------- detail
   var veilDetail = document.getElementById("veilDetail");
@@ -994,9 +1227,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     var card = veilDetail.querySelector(".card");
     card.style.setProperty("--proj", p.color);
     veilDetail.style.setProperty("--proj", p.color);
-    var shot = document.getElementById("dShot");
-    shot.src = p.image || "";
-    shot.alt = p.name + " — tangkapan layar";
+    initGallery(p);
     document.getElementById("dKind").textContent = kindLabel(p);
     document.getElementById("dName").textContent = p.name;
     var sub = document.getElementById("dSub");
@@ -1110,7 +1341,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     }
     if (chassisBody.position.y < -12) placeCar(SPAWN.x, SPAWN.y, SPAWN.z, SPAWN_YAW);
 
-    if (phase !== "intro") updateFocus(dt);
+    if (phase !== "intro") { updateFocus(dt); updateBoards(dt); }
 
     var spd = Math.abs(Math.round(vehicle.currentVehicleSpeedKmHour));
     if (spd !== lastSpd) { elSpd.textContent = String(spd); lastSpd = spd; }

@@ -2,6 +2,8 @@
 
 Portofolio yang dikendarai. 31 proyek berdiri sebagai papan di halaman 3D —
 berkendaralah di antaranya, berhenti di depan salah satunya, dan baca detailnya.
+Sembilan karya unggulan punya 5–7 screenshot berlabel yang bisa ditelusuri;
+papannya sendiri berganti-ganti foto selama kamu berhenti di depannya.
 
 Datanya bukan salinan manual: ditarik langsung dari
 [ghaisansyams.vercel.app](https://ghaisansyams.vercel.app).
@@ -18,6 +20,7 @@ Static site murni — tanpa build step, tanpa `npm install`.
 | --- | --- |
 | `W` `A` `S` `D` | berkendara |
 | `E` | buka detail papan terdekat |
+| `←` `→` | ganti foto (saat detail terbuka) |
 | `Esc` | tutup detail |
 | `Space` | rem tangan |
 | `R` | balikkan mobil kalau kebalik |
@@ -41,6 +44,20 @@ Dua lingkaran sepusat dengan boulevard di antaranya:
 Karena kedua lingkaran menghadap ke boulevard, berkendara memutar berarti karya
 unggulan di satu sisi dan eksperimen di sisi lain. Papan lingkar luar diurutkan
 per kategori (3D & Creative → Games → Web) dengan rambu gerbang di tiap pergantian.
+
+## Galeri foto
+
+Portofolionya menyimpan beberapa screenshot berlabel per karya unggulan —
+"Landing", "Dashboard", "AI Matchmaking", dan seterusnya. Totalnya 80 foto:
+58 tersebar di 9 karya unggulan, 22 sisanya satu-satu untuk tiap eksperimen.
+
+Semua ikut ditarik. Di panel detail ada galeri lengkap: foto besar, label,
+penghitung, panah kiri/kanan, dan deretan thumbnail. Di dunia 3D, papan yang
+sedang kamu hadapi berganti foto sendiri dengan crossfade tiap 2.8 detik.
+
+Sinkronisasi menormalkan keduanya jadi satu bentuk — tiap proyek punya array
+`shots` berisi `{src, label, blur}`, dan eksperimen yang cuma punya satu gambar
+tetap dapat array berisi satu elemen. Penampilnya jadi tidak perlu percabangan.
 
 ## Sinkronisasi data
 
@@ -88,6 +105,23 @@ numerik terhadap seluruh 31 titik baca: jarak terdekatnya 16.5 m.
 **Perpindahan fokus pakai histeresis.** Garis tengah boulevard berjarak sama ke
 kedua lingkaran, jadi aturan "yang terdekat menang" membuat fokus berkedip antar
 papan tiap frame. Penantang baru harus setidaknya 28% lebih dekat untuk merebut.
+
+**Galeri dibatasi dua proyek di memori GPU.** 80 screenshot yang semuanya
+resident memakan sekitar 70 MB. Jadi saat start hanya foto sampul tiap proyek
+yang dimuat (31 tekstur); sisanya menyusul hanya untuk papan yang sedang
+difokus, dan cuma dua proyek terakhir yang galerinya disimpan — selebihnya
+dilepas kembali ke foto sampul. Ada jeda 1.2 detik sebelum pemuatan dimulai,
+supaya sekadar melintas tidak memicu unduhan.
+
+**Lapisan crossfade disembunyikan saat menganggur.** Papan punya dua plane:
+satu untuk foto sekarang, satu untuk foto berikutnya yang memudar di atasnya.
+Material `transparent` tetap dirender three.js walaupun `opacity` 0, jadi 31
+lapisan itu sempat menambah overdraw percuma sebelum `visible = false`.
+
+**Bingkai galeri 16:10, bukan 16:8 dengan `cover`.** Sumbernya 1600×1000
+hampir seragam. Versi awal memakai bingkai lebih pendek dengan `object-fit:
+cover`, yang memotong bagian bawah tiap screenshot — hal terakhir yang pantas
+dilakukan portofolio pada karyanya sendiri.
 
 **Nameplate digambar ulang setelah webfont mendarat.** Teks canvas diukur dengan
 font yang siap saat itu juga, jadi tanpa `document.fonts.ready` semua nameplate
