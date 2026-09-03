@@ -161,6 +161,16 @@ hampir seragam. Versi awal memakai bingkai lebih pendek dengan `object-fit:
 cover`, yang memotong bagian bawah tiap screenshot — hal terakhir yang pantas
 dilakukan portofolio pada karyanya sendiri.
 
+**Mobil pemain tidak boleh tidur.** cannon memarkir sebuah body setelah satu
+detik simulasi di bawah ambang kecepatan, dan body yang tidur mengabaikan
+impuls yang diberikan `RaycastVehicle` — gas jadi tidak berefek sampai ada yang
+memanggil `wakeUp()`. Satu-satunya `wakeUp()` di file ini ada di dalam
+`placeCar()`, yang persis dipanggil oleh tombol `R`; itulah kenapa dulu mobil
+seolah harus "dibangunkan" dengan R sebelum WASD berfungsi. Sekarang sasisnya
+`allowSleep = false`, `startRun()` mengembalikan mobil ke spawn saat run dimulai
+(seperti yang sudah dilakukan Diecast Rally sejak awal), dan tombol arah apa pun
+memanggil `wakeUp()` sebagai pengaman.
+
 **Image-based lighting dibuang setelah membuat lantai jadi putih total.**
 `PMREMGenerator.fromScene()` di atas kubah langit menghasilkan environment map
 yang membakar seluruh lantai — seluruh paruh bawah layar putih polos. Tanpa

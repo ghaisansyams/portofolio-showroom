@@ -1074,6 +1074,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
   chassisBody.position.copy(SPAWN);
   chassisBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), SPAWN_YAW);
   chassisBody.angularDamping = 0.35;
+  chassisBody.allowSleep = false; // never park the car the player is sitting in
 
   var vehicle = new CANNON.RaycastVehicle({
     chassisBody: chassisBody, indexRightAxis: 0, indexUpAxis: 1, indexForwardAxis: 2
@@ -1143,6 +1144,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
       if (e.code === "ArrowRight") { showShot(gal.i + 1); return; }
     }
     keys[e.code] = true;
+    if (isDriveKey(e.code) || e.code === "Space") chassisBody.wakeUp();
     if (e.code === "KeyR") respawn();
     if (e.code === "KeyE") toggleDetail();
     if (e.code === "Escape") closeDetail();
@@ -1225,6 +1227,18 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
     var v = new THREE.Vector3(0, 0, 1).applyQuaternion(new THREE.Quaternion(q.x, q.y, q.z, q.w));
     return Math.atan2(v.x, v.z);
   }
+  // Diecast Rally resets the car when the run starts; this never did, so the run
+  // inherited whatever state the car drifted into while the intro was on screen.
+  function startRun() {
+    placeCar(SPAWN.x, SPAWN.y, SPAWN.z, SPAWN_YAW);
+    steer = 0;
+    for (var i = 0; i < 4; i++) {
+      vehicle.applyEngineForce(0, i);
+      vehicle.setBrake(0, i);
+      vehicle.setSteeringValue(0, i);
+    }
+  }
+
   function respawn() {
     if (phase !== "drive") return;
     var p = chassisBody.position;
@@ -1563,6 +1577,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
     setTimeout(function () { vi.hidden = true; }, 400);
     document.getElementById("rail").classList.add("on");
     document.getElementById("mute").classList.add("on");
+    startRun();
     phase = "drive";
   });
   var muteBtn = document.getElementById("mute");
