@@ -59,6 +59,23 @@ Sinkronisasi menormalkan keduanya jadi satu bentuk — tiap proyek punya array
 `shots` berisi `{src, label, blur}`, dan eksperimen yang cuma punya satu gambar
 tetap dapat array berisi satu elemen. Penampilnya jadi tidak perlu percabangan.
 
+## Bahasa visual
+
+Dunianya chunky dan terang, jadi antarmukanya sengaja kebalikannya: hairline,
+ruang kosong, dan satu garis aksen warna proyek per papan. Tidak ada border
+tebal atau hard offset shadow di mana pun — kontras antara mainan dan label
+itulah idenya.
+
+Menekan `E` tidak memunculkan modal di tengah layar. Kamera mendekat dan
+membingkai papan 3D yang sebenarnya di sisi kiri, lalu panel masuk dari kanan
+dengan isinya menyusul bertahap. Kamu membaca sambil menatap benda fisiknya —
+dan karena thumbnail galeri juga mengganti foto di papan itu, dua sisi layar
+menampilkan screenshot yang sama.
+
+Statistik dipasang sebagai daftar spesifikasi dengan titik-titik penghubung,
+bukan grid berkotak. Penomoran "05 / 31" bukan hiasan: itu posisi katalog papan
+tersebut di halaman, karya unggulan lebih dulu.
+
 ## Sinkronisasi data
 
 ```bash
@@ -122,6 +139,18 @@ lapisan itu sempat menambah overdraw percuma sebelum `visible = false`.
 hampir seragam. Versi awal memakai bingkai lebih pendek dengan `object-fit:
 cover`, yang memotong bagian bawah tiap screenshot — hal terakhir yang pantas
 dilakukan portofolio pada karyanya sendiri.
+
+**Matahari diturunkan untuk bayangan golden-hour.** Sudut elevasinya sekitar
+24°, jadi bayangan memanjang menyapu aspal. Konsekuensinya cahaya yang jatuh di
+tanah datar berkurang separuh (`NdotL` 0.82 → 0.41), jadi intensitas matahari
+ikut dinaikkan supaya pasirnya tidak berubah keruh. Kotak shadow camera juga
+dilebarkan ke ±38 karena bayangan sepanjang itu tak lagi muat di ±30.
+
+**Panel mobile sempat meluber 28 px di bawah layar.** Aturan di media query
+`.veil:not(.intro) .sheet` punya spesifisitas persis sama dengan
+`.veil.open .sheet` tapi ditulis belakangan, jadi offset masuk
+`translateY(28px)` tidak pernah dibatalkan saat panel terbuka. Keadaan terbuka
+harus dinyatakan ulang di dalam media query itu.
 
 **Nameplate digambar ulang setelah webfont mendarat.** Teks canvas diukur dengan
 font yang siap saat itu juga, jadi tanpa `document.fonts.ready` semua nameplate

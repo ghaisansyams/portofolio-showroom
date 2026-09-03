@@ -21,13 +21,22 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Azeret+Mono:wght@400;500;700&display=swap">
 
 <style>
+/* Showroom placard: the world is chunky and bright, so the interface is the
+   opposite -- hairlines, air, and one accent rule per project. No thick borders
+   or hard offset shadows; the contrast between toy and label is the idea. */
 :root{
-  --ground:#1B1726; --panel:#241E33; --panel-hi:#2E2743; --line:#3E3459;
-  --ink:#F6EFE2; --ink-dim:#A99CBE;
+  --ground:#141021;
+  --panel:rgba(21,16,34,.90);
+  --ink:#F4EEE3;
+  --ink-2:#C7BBD6;
+  --ink-3:#8E82A6;
+  --hair:rgba(244,238,227,.14);
+  --hair-2:rgba(244,238,227,.07);
   --gold:#FFC77A; --gold-hot:#FFD34E; --red:#E8402A; --teal:#2FB5A0;
   --proj:#FFC77A;
   --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
   --mono:"Azeret Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --ease:cubic-bezier(.22,.7,.2,1);
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -38,219 +47,295 @@ body{
 }
 canvas#scene{position:fixed;inset:0;display:block;width:100%;height:100%}
 
-/* ---------- top rail ---------- */
+/* corner falloff so the render sits in the page instead of on top of it */
+.grade{
+  position:fixed;inset:0;z-index:4;pointer-events:none;
+  background:radial-gradient(128% 92% at 50% 40%, rgba(0,0,0,0) 44%, rgba(24,14,34,.52) 100%);
+}
+
+kbd{
+  font-family:var(--mono);font-size:9px;font-weight:700;color:var(--ink-2);
+  border:1px solid var(--hair);background:rgba(244,238,227,.05);
+  padding:2px 6px;min-width:19px;text-align:center;display:inline-block;
+}
+
+/* ---------- readouts ---------- */
 .rail{
   position:fixed;top:0;left:0;right:0;z-index:10;
   display:flex;justify-content:space-between;align-items:flex-start;
-  gap:12px;padding:14px 18px;pointer-events:none;
-  opacity:0;transition:opacity .4s ease;
+  padding:20px 24px;pointer-events:none;
+  opacity:0;transition:opacity .5s var(--ease);
+  text-shadow:0 1px 12px rgba(16,10,26,.65);
 }
 .rail.on{opacity:1}
-.chip{
-  display:flex;align-items:baseline;gap:10px;
-  background:rgba(27,23,38,.72);border:2px solid var(--line);
-  box-shadow:4px 4px 0 rgba(0,0,0,.35);padding:8px 14px;
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+.meter{display:flex;flex-direction:column;gap:7px}
+.meter.right{align-items:flex-end}
+.meter .k{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.meter .v{
+  font-family:var(--display);font-weight:800;font-size:27px;
+  letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums;
 }
-.chip .lab{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim);font-weight:500}
-.chip .val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
-.val.seen{color:var(--gold-hot)}
-.val.spd{color:var(--teal)}
-.spd .unit{font-size:11px;color:var(--ink-dim);font-weight:500;margin-left:2px}
+.meter .v small{font-size:13px;color:var(--ink-3);font-weight:700;margin-left:2px}
+.bar{display:block;height:2px;width:172px;background:var(--hair-2)}
+.bar i{display:block;height:100%;width:0;background:var(--gold-hot);transition:width .55s var(--ease)}
 
-/* progress rail under the counter */
-.bar{margin-top:7px;height:4px;width:150px;background:var(--panel-hi);box-shadow:inset 0 0 0 1px var(--line)}
-.bar i{display:block;height:100%;width:0;background:var(--gold-hot);transition:width .35s ease}
-
-/* ---------- focus card ---------- */
+/* ---------- wall label for the board in front of you ---------- */
 .focus{
-  position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(14px);
-  z-index:11;width:min(640px,calc(100vw - 32px));
-  background:rgba(27,23,38,.9);border:2px solid var(--line);
-  border-left:6px solid var(--proj);
-  box-shadow:6px 6px 0 rgba(0,0,0,.4);
-  padding:14px 18px;opacity:0;pointer-events:none;
-  transition:opacity .22s ease, transform .22s ease;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  position:fixed;left:50%;bottom:28px;z-index:11;
+  width:min(560px,calc(100vw - 32px));
+  transform:translateX(-50%) translateY(10px);
+  padding:15px 19px 16px;
+  background:rgba(20,15,32,.74);
+  backdrop-filter:blur(16px) saturate(1.1);-webkit-backdrop-filter:blur(16px) saturate(1.1);
+  border:1px solid var(--hair);
+  opacity:0;pointer-events:none;
+  transition:opacity .28s var(--ease),transform .28s var(--ease);
 }
 .focus.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.focus .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.focus h2{
-  font-family:var(--display);font-weight:800;font-size:23px;
-  letter-spacing:-.025em;margin:0;line-height:1.05;
-}
-.focus .shots{
-  font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
-  color:var(--ink-dim);border:1px solid var(--line);padding:3px 7px;
-}
-.focus .shots:empty{display:none}
-.focus .kind{
-  font-size:9px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
-  color:var(--ground);background:var(--proj);padding:3px 7px;
-}
+.focus.hide{opacity:0;transform:translateX(-50%) translateY(10px)}
+.focus .rule{width:32px;height:2px;background:var(--proj);margin:0 0 11px;transition:background .25s var(--ease)}
+.focus .top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.focus h2{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.035em;margin:0;line-height:1.04}
+.focus .kindline{display:flex;gap:9px;align-items:baseline;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.focus .kindline span:empty{display:none}
 .focus .tag{
-  font-size:12px;color:var(--ink-dim);margin:6px 0 0;line-height:1.5;
+  font-size:12px;color:var(--ink-2);margin:8px 0 0;line-height:1.55;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .focus .cue{
-  margin-top:11px;font-size:11px;color:var(--ink-dim);
-  display:flex;align-items:center;gap:8px;letter-spacing:.04em;
-}
-kbd{
-  font-family:var(--mono);font-size:10px;font-weight:700;
-  background:var(--panel-hi);border:1px solid var(--line);border-bottom-width:3px;
-  color:var(--ink);padding:3px 7px;min-width:22px;text-align:center;display:inline-block;
+  margin-top:12px;padding-top:11px;border-top:1px solid var(--hair-2);
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:10px;color:var(--ink-3);letter-spacing:.08em;
 }
 
-/* ---------- detail sheet ---------- */
+/* ---------- side sheet ---------- */
 .veil{
-  position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;
-  background:radial-gradient(120% 90% at 50% 40%, rgba(27,23,38,.6) 0%, rgba(27,23,38,.94) 70%);
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  position:fixed;inset:0;z-index:20;display:flex;justify-content:flex-end;
+  opacity:0;transition:opacity .3s var(--ease);
 }
+.veil.open{opacity:1}
 .veil[hidden]{display:none}
-.card{
-  width:min(680px,100%);max-height:calc(100vh - 48px);overflow-y:auto;
-  background:var(--panel);border:3px solid var(--ink);
-  box-shadow:10px 10px 0 var(--proj);
+.veil::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg, rgba(20,15,32,0) 0%, rgba(20,15,32,.22) 38%, rgba(20,15,32,.7) 66%, rgba(20,15,32,.88) 100%);
 }
-.gal{position:relative;background:var(--panel-hi);border-bottom:3px solid var(--ink)}
-.card .shot{display:block;width:100%;aspect-ratio:16/10;object-fit:contain;background:var(--panel-hi)}
+.sheet:focus{outline:none}
+.sheet{
+  position:relative;width:min(540px,100%);height:100%;
+  overflow-y:auto;overscroll-behavior:contain;
+  background:var(--panel);
+  backdrop-filter:blur(20px) saturate(1.15);-webkit-backdrop-filter:blur(20px) saturate(1.15);
+  border-left:1px solid var(--hair);
+  transform:translateX(28px);opacity:0;
+  transition:transform .46s var(--ease),opacity .34s var(--ease);
+}
+.veil.open .sheet{transform:none;opacity:1}
+.sheet-inner{padding:34px 36px 48px}
+
+.close{
+  position:absolute;top:22px;right:22px;z-index:3;
+  width:32px;height:32px;padding:0;cursor:pointer;
+  background:none;border:1px solid var(--hair);color:var(--ink-3);
+  display:grid;place-items:center;font-size:13px;
+  transition:color .18s var(--ease),border-color .18s var(--ease);
+}
+.close:hover{color:var(--ink);border-color:var(--ink-3)}
+.close:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
+
+/* index reads as a real position in the yard: project N of 31 */
+.idx{display:flex;gap:9px;align-items:baseline;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.idx b{color:var(--proj);font-weight:700;font-variant-numeric:tabular-nums}
+.idx .sep{opacity:.4}
+.rule{width:44px;height:2px;background:var(--proj);margin:18px 0 20px;transition:background .25s var(--ease)}
+
+.sheet h1{
+  font-family:var(--display);font-weight:800;
+  font-size:clamp(29px,4.3vw,40px);line-height:.97;letter-spacing:-.042em;
+  margin:0 0 11px;text-wrap:balance;
+}
+.sheet .sub{font-family:var(--display);font-weight:400;font-size:17px;line-height:1.36;color:var(--ink);margin:0 0 11px}
+.sheet .sub:empty{display:none}
+.sheet .meta{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin:0}
+.sheet .meta:empty{display:none}
+.sheet .desc{
+  font-family:var(--display);font-weight:400;font-size:15px;line-height:1.72;
+  color:var(--ink-2);margin:26px 0 0;max-width:52ch;
+}
+
+/* label + trailing hairline: a section marker that is a rule, not a badge */
+.sect{
+  display:flex;align-items:center;gap:12px;
+  font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-3);
+  margin:32px 0 14px;
+}
+.sect::after{content:"";flex:1;height:1px;background:var(--hair-2)}
+
+/* ---------- gallery ---------- */
+.gal{position:relative;margin:28px 0 0;border:1px solid var(--hair);background:#0F0B18}
+.gal .shot{display:block;width:100%;aspect-ratio:16/10;object-fit:contain;background:#0F0B18}
 .gal .nav{
-  position:absolute;top:50%;transform:translateY(-50%);
-  width:40px;height:40px;border-radius:50%;
-  background:rgba(27,23,38,.78);border:2px solid var(--line);
-  color:var(--ink);font-size:16px;cursor:pointer;
-  display:grid;place-items:center;padding:0;
-  opacity:.55;transition:opacity .18s ease,background .18s ease;
+  position:absolute;top:calc(50% - 18px);transform:translateY(-50%);
+  width:34px;height:34px;padding:0;cursor:pointer;
+  background:rgba(15,11,24,.7);border:1px solid var(--hair);color:var(--ink);
+  display:grid;place-items:center;font-size:13px;
+  opacity:.45;transition:opacity .18s var(--ease),background .18s var(--ease);
 }
-.gal:hover .nav,.gal .nav:focus-visible{opacity:1}
-.gal .nav:hover{background:var(--proj);color:#17131f}
-.gal .nav:focus-visible{outline:3px solid var(--gold-hot);outline-offset:2px}
-.gal .prev{left:10px}
-.gal .next{right:10px}
-.gal[data-single="1"] .nav,.gal[data-single="1"] .gcount{display:none}
-.galbar{
-  position:absolute;left:0;right:0;bottom:0;
+.gal:hover .nav{opacity:1}
+.gal .nav:hover{background:var(--proj);color:#141021;border-color:transparent}
+.gal .nav:focus-visible{opacity:1;outline:2px solid var(--gold-hot);outline-offset:2px}
+.gal .prev{left:9px}
+.gal .next{right:9px}
+.gal[data-single="1"] .nav,.gal[data-single="1"] .galcap .c{display:none}
+/* caption sits under the image, never over it -- the screenshot is the point */
+.galcap{
   display:flex;justify-content:space-between;align-items:center;gap:12px;
-  padding:22px 14px 9px;
-  background:linear-gradient(to top, rgba(23,19,31,.92), rgba(23,19,31,0));
-  pointer-events:none;
+  padding:9px 12px;border-top:1px solid var(--hair);
+  font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
 }
-.glabel{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:-.01em;color:var(--ink)}
-.gcount{font-size:11px;color:var(--ink-dim);font-variant-numeric:tabular-nums;letter-spacing:.08em}
-.thumbs{
-  display:flex;gap:7px;padding:11px 14px;overflow-x:auto;
-  border-bottom:3px solid var(--ink);background:var(--panel);
-  scrollbar-width:thin;
+.galcap .l{color:var(--ink)}
+.galcap .c{color:var(--ink-3);font-variant-numeric:tabular-nums;letter-spacing:.1em}
+
+.strip{display:flex;gap:6px;margin-top:9px;overflow-x:auto;padding-bottom:5px;scrollbar-width:thin}
+.strip[hidden]{display:none}
+.strip button{
+  flex:0 0 auto;width:66px;height:41px;padding:0;cursor:pointer;
+  border:1px solid var(--hair);background:#0F0B18;overflow:hidden;
+  opacity:.48;transition:opacity .18s var(--ease),box-shadow .18s var(--ease);
 }
-.thumbs:empty,.thumbs[hidden]{display:none}
-.thumbs button{
-  flex:0 0 auto;width:84px;height:53px;padding:0;cursor:pointer;
-  border:2px solid var(--line);background:var(--panel-hi);
-  overflow:hidden;position:relative;opacity:.62;
-  transition:opacity .16s ease,border-color .16s ease;
+.strip button img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.strip button:hover{opacity:.85}
+.strip button[aria-current="true"]{opacity:1;box-shadow:inset 0 0 0 2px var(--proj)}
+.strip button:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
+
+/* ---------- tech + spec ---------- */
+.tech{display:flex;flex-wrap:wrap;gap:6px}
+.tech span{font-size:10.5px;color:var(--ink-2);background:rgba(244,238,227,.055);padding:5px 9px}
+.tech:empty{display:none}
+
+/* dotted leaders: a spec plate, not another bordered grid */
+.spec .r{display:flex;align-items:baseline;gap:9px;padding:10px 0;border-bottom:1px solid var(--hair-2)}
+.spec .r:last-child{border-bottom:0}
+.spec .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.spec .d{flex:1;border-bottom:1px dotted rgba(244,238,227,.22);transform:translateY(-4px)}
+.spec .v{font-family:var(--display);font-weight:800;font-size:17px;letter-spacing:-.025em;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---------- actions ---------- */
+.act{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:32px}
+.cta{
+  font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:-.005em;
+  color:var(--proj);background:none;border:1px solid var(--proj);
+  padding:11px 18px;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;gap:9px;
+  transition:background .2s var(--ease),color .2s var(--ease);
 }
-.thumbs button img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
-.thumbs button:hover{opacity:.9}
-.thumbs button[aria-current="true"]{opacity:1;border-color:var(--proj)}
-.thumbs button:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
-.card .body{padding:24px 26px 26px}
-.eyebrow{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--proj);font-weight:700;margin:0 0 10px}
-.card h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5.2vw,40px);line-height:.98;letter-spacing:-.035em;margin:0 0 8px;text-wrap:balance}
-.card .sub{font-family:var(--display);font-weight:400;font-size:16px;color:var(--ink);margin:0 0 4px;line-height:1.4}
-.card .meta{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 18px}
-.card .desc{font-family:var(--display);font-weight:400;font-size:15px;line-height:1.62;color:var(--ink-dim);margin:0 0 20px;max-width:56ch}
-.pills{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 20px}
-.pills span{font-size:11px;color:var(--ink-dim);border:1px solid var(--line);padding:4px 9px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));border:2px solid var(--line);margin:0 0 20px}
-.stats>div{padding:12px 14px}
-.stats>div+div{border-left:2px solid var(--line)}
-.stats .k{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-dim)}
-.stats .v{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.03em;margin-top:3px;font-variant-numeric:tabular-nums}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-a.go,button.go{
-  font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.01em;
-  background:var(--proj);color:#17131f;border:3px solid var(--ink);
-  box-shadow:5px 5px 0 var(--ink);padding:11px 20px;cursor:pointer;
-  text-decoration:none;display:inline-block;
-  transition:transform .1s ease, box-shadow .1s ease;
+.cta:hover{background:var(--proj);color:#141021}
+.cta .arw{display:inline-block;transition:transform .2s var(--ease)}
+.cta:hover .arw{transform:translateX(3px)}
+.cta:focus-visible{outline:2px solid var(--gold-hot);outline-offset:3px}
+button.quiet{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);background:none;border:0;cursor:pointer;padding:11px 2px;
+  transition:color .18s var(--ease);
 }
-button.ghost{background:transparent;color:var(--ink)}
-a.go:hover,button.go:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--ink)}
-a.go:active,button.go:active{transform:translate(5px,5px);box-shadow:0 0 0 var(--ink)}
-a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);outline-offset:3px}
-.locked{font-size:12px;color:var(--ink-dim);border:1px dashed var(--line);padding:10px 14px}
+button.quiet:hover{color:var(--ink)}
+button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
+.private{font-size:11px;color:var(--ink-3);border:1px dashed var(--hair);padding:11px 14px;line-height:1.5}
+.src{margin:34px 0 0;padding-top:18px;border-top:1px solid var(--hair-2);font-size:10.5px;color:var(--ink-3);line-height:1.7}
+.src a{color:var(--gold);text-underline-offset:3px}
+.src code{font-size:10px;color:var(--ink-2)}
+
+/* content settles in a short cascade rather than snapping into place */
+[data-rev]{opacity:0;transform:translateY(10px);transition:opacity .42s var(--ease),transform .42s var(--ease)}
+.veil.open [data-rev]{opacity:1;transform:none}
+.veil.open [data-rev="1"]{transition-delay:.08s}
+.veil.open [data-rev="2"]{transition-delay:.13s}
+.veil.open [data-rev="3"]{transition-delay:.18s}
+.veil.open [data-rev="4"]{transition-delay:.23s}
+.veil.open [data-rev="5"]{transition-delay:.28s}
+.veil.open [data-rev="6"]{transition-delay:.32s}
+.veil.open [data-rev="7"]{transition-delay:.36s}
 
 /* ---------- intro ---------- */
-.intro .card{box-shadow:10px 10px 0 var(--red)}
-.intro h1 em{font-style:normal;color:var(--red);display:block}
-.legend{display:grid;gap:7px;margin:18px 0 0}
-.legend .r{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--ink-dim)}
-.src{margin-top:16px;font-size:11px;color:var(--ink-dim);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
-.src a{color:var(--gold)}
+.intro{justify-content:center;align-items:center;padding:24px}
+.intro::before{background:radial-gradient(122% 92% at 50% 44%, rgba(20,15,32,.5) 0%, rgba(20,15,32,.93) 72%)}
+.intro .sheet{width:min(560px,100%);height:auto;max-height:calc(100vh - 48px);border:1px solid var(--hair);transform:translateY(16px)}
+.keys{display:grid;gap:9px}
+.keys .r{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--ink-3);letter-spacing:.03em}
 
+/* ---------- chrome ---------- */
 .mute{
-  position:fixed;right:18px;bottom:18px;z-index:11;
-  background:rgba(27,23,38,.72);border:2px solid var(--line);color:var(--ink-dim);
-  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-  font-weight:700;padding:8px 12px;cursor:pointer;opacity:0;transition:opacity .4s ease,color .2s ease;
+  position:fixed;right:24px;bottom:24px;z-index:11;
+  background:none;border:1px solid var(--hair);color:var(--ink-3);
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:700;padding:8px 12px;cursor:pointer;
+  opacity:0;transition:opacity .5s var(--ease),color .2s var(--ease),border-color .2s var(--ease);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
 .mute.on{opacity:1}
-.mute:hover{color:var(--ink)}
+.mute:hover{color:var(--ink);border-color:var(--ink-3)}
 
-.pad{position:fixed;inset:auto 0 0 0;z-index:12;display:none;padding:0 16px 20px;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.pad{position:fixed;inset:auto 0 0 0;z-index:12;display:none;padding:0 18px 22px;justify-content:space-between;align-items:flex-end;pointer-events:none}
 .pad.on{display:flex}
 .pad .cluster{display:flex;gap:11px;pointer-events:auto}
 .pad button{
-  width:70px;height:70px;background:rgba(36,30,51,.85);border:2px solid var(--line);
-  color:var(--ink);font-family:var(--display);font-weight:800;font-size:19px;border-radius:50%;
+  width:66px;height:66px;border-radius:50%;
+  background:rgba(20,15,32,.7);border:1px solid var(--hair);color:var(--ink);
+  font-family:var(--display);font-weight:800;font-size:18px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   -webkit-user-select:none;user-select:none;touch-action:none;
 }
-.pad button.act{width:auto;padding:0 20px;border-radius:36px;font-size:14px;background:var(--proj);color:#17131f}
-.pad button.hit{background:var(--red);border-color:var(--ink)}
+.pad button.act2{width:auto;padding:0 20px;border-radius:34px;font-size:13px;border-color:var(--proj);color:var(--proj)}
+.pad button.hit{background:var(--proj);color:#141021;border-color:transparent}
 
-@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
-@media (max-width:600px){
-  .rail{padding:10px 12px}
-  .chip{padding:6px 10px;gap:7px}
-  .chip .val{font-size:17px}
-  .bar{width:110px}
-  .focus{bottom:100px;padding:12px 14px}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important}
+  [data-rev]{opacity:1;transform:none}
+}
+@media (max-width:720px){
+  .veil:not(.intro){align-items:flex-end}
+  .veil:not(.intro)::before{background:linear-gradient(180deg, rgba(20,15,32,0) 0%, rgba(20,15,32,.5) 40%, rgba(20,15,32,.86) 100%)}
+  .veil:not(.intro) .sheet{width:100%;height:auto;max-height:86vh;border-left:0;border-top:1px solid var(--hair);transform:translateY(28px)}
+  /* same specificity as `.veil.open .sheet` but later in the sheet, so the open
+     state has to be restated here or the entry offset never clears and the
+     bottom of the sheet sits below the viewport */
+  .veil:not(.intro).open .sheet{transform:none}
+  .sheet-inner{padding:26px 22px 34px}
+  .rail{padding:14px 16px}
+  .meter .v{font-size:21px}
+  .bar{width:120px}
+  .focus{bottom:104px;padding:13px 15px}
   .focus h2{font-size:19px}
   .focus .cue{display:none}
-  .card .body{padding:20px}
-  .gal .nav{opacity:1;width:34px;height:34px}
-  .thumbs button{width:68px;height:43px}
+  .gal .nav{opacity:1}
+  .strip button{width:58px;height:36px}
 }
 </style>
 </head>
 <body>
 
 <canvas id="scene"></canvas>
+<div class="grade"></div>
 
 <div class="rail" id="rail">
-  <div>
-    <div class="chip">
-      <span class="lab">Dijelajahi</span>
-      <span class="val seen"><span id="seenN">0</span><span style="color:var(--ink-dim)">/<span id="seenT">0</span></span></span>
-    </div>
-    <div class="bar"><i id="bar"></i></div>
+  <div class="meter">
+    <span class="k">Dijelajahi</span>
+    <span class="v"><span id="seenN">0</span><small>/<span id="seenT">0</span></small></span>
+    <span class="bar"><i id="bar"></i></span>
   </div>
-  <div class="chip">
-    <span class="lab">Laju</span>
-    <span class="val spd"><span id="spd">0</span><span class="unit">km/j</span></span>
+  <div class="meter right">
+    <span class="k">Laju</span>
+    <span class="v"><span id="spd">0</span><small>km/j</small></span>
   </div>
 </div>
 
 <div class="focus" id="focus">
+  <div class="rule"></div>
   <div class="top">
-    <h2 id="fName">—</h2>
-    <span class="kind" id="fKind">Proyek</span>
-    <span class="shots" id="fShots"></span>
+    <h2 id="fName">&mdash;</h2>
+    <span class="kindline"><span id="fKind"></span><span id="fShots"></span></span>
   </div>
   <p class="tag" id="fTag"></p>
-  <div class="cue"><kbd>E</kbd> lihat detail</div>
+  <div class="cue"><span><kbd>E</kbd> lihat detail</span><span id="fPos"></span></div>
 </div>
 
 <button class="mute" id="mute" type="button">Suara: On</button>
@@ -261,50 +346,61 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     <button type="button" data-k="right">&#8594;</button>
   </div>
   <div class="cluster">
-    <button type="button" class="act" data-k="act">Detail</button>
+    <button type="button" class="act2" data-k="act">Detail</button>
     <button type="button" data-k="back">&#8595;</button>
     <button type="button" data-k="fwd">&#8593;</button>
   </div>
 </div>
 
 <div class="veil intro" id="veilIntro">
-  <div class="card">
-    <div class="body">
-      <p class="eyebrow">Portofolio yang bisa dikendarai</p>
-      <h1>Diecast<em>Showroom</em></h1>
-      <p class="desc">Halaman pamer setinggi mobil mainan. <b id="introN">31</b> proyek berdiri sebagai papan di dua lingkaran: karya unggulan menghadap keluar di lingkar dalam, eksperimen menghadap ke dalam di lingkar luar. Berkendaralah di antaranya, dan berhenti di papan mana pun untuk membaca detailnya.</p>
-      <div class="legend">
+  <div class="sheet">
+    <div class="sheet-inner">
+      <div class="idx"><b id="introN">31</b><span class="sep">/</span><span>proyek berdiri di halaman</span></div>
+      <div class="rule"></div>
+      <h1>Diecast Showroom</h1>
+      <p class="sub">Portofolio yang bisa dikendarai.</p>
+      <p class="desc">Halaman pamer setinggi mobil mainan. Karya unggulan berdiri di lingkar dalam menghadap keluar, eksperimen di lingkar luar menghadap ke dalam, dan boulevard beraspal memisahkan keduanya. Berhentilah di depan papan mana pun untuk membacanya.</p>
+      <div class="sect">Kendali</div>
+      <div class="keys">
         <div class="r"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> berkendara</div>
         <div class="r"><kbd>E</kbd> buka detail papan terdekat</div>
-        <div class="r"><kbd>Space</kbd> rem tangan &nbsp;·&nbsp; <kbd>R</kbd> balikkan mobil</div>
+        <div class="r"><kbd>Space</kbd> rem tangan <span class="sep">&middot;</span> <kbd>R</kbd> balikkan mobil</div>
       </div>
-      <div class="row" style="margin-top:20px"><button class="go" id="btnStart" type="button">Masuk Halaman</button></div>
+      <div class="act"><button class="cta" id="btnStart" type="button">Masuk halaman <span class="arw">&#8594;</span></button></div>
       <p class="src">Data proyek ditarik dari <a href="https://ghaisansyams.vercel.app" target="_blank" rel="noopener">ghaisansyams.vercel.app</a> lewat <code>scripts/sync-portfolio.mjs</code>; gambarnya dimuat langsung dari sana, jadi ikut terbarui sendiri.</p>
     </div>
   </div>
 </div>
 
 <div class="veil" id="veilDetail" hidden>
-  <div class="card">
-    <div class="gal" id="dGal">
-      <img class="shot" id="dShot" alt="">
-      <button class="nav prev" id="dPrev" type="button" aria-label="Foto sebelumnya">&#8592;</button>
-      <button class="nav next" id="dNext" type="button" aria-label="Foto berikutnya">&#8594;</button>
-      <div class="galbar">
-        <span class="glabel" id="dLabel"></span>
-        <span class="gcount" id="dCount"></span>
+  <div class="sheet" id="dSheet" tabindex="-1">
+    <button class="close" id="dClose" type="button" aria-label="Tutup detail">&#10005;</button>
+    <div class="sheet-inner">
+      <div class="idx" data-rev="1"><b id="dIdx">01</b><span class="sep">/</span><span id="dTot">31</span><span class="sep">&middot;</span><span id="dKind"></span></div>
+      <div class="rule" data-rev="1"></div>
+      <h1 id="dName" data-rev="2">&mdash;</h1>
+      <p class="sub" id="dSub" data-rev="2"></p>
+      <p class="meta" id="dMeta" data-rev="2"></p>
+
+      <div class="gal" id="dGal" data-rev="3">
+        <img class="shot" id="dShot" alt="">
+        <button class="nav prev" id="dPrev" type="button" aria-label="Foto sebelumnya">&#8592;</button>
+        <button class="nav next" id="dNext" type="button" aria-label="Foto berikutnya">&#8594;</button>
+        <div class="galcap"><span class="l" id="dLabel"></span><span class="c" id="dCount"></span></div>
       </div>
-    </div>
-    <div class="thumbs" id="dThumbs"></div>
-    <div class="body">
-      <p class="eyebrow" id="dKind">Proyek</p>
-      <h1 id="dName">—</h1>
-      <p class="sub" id="dSub"></p>
-      <p class="meta" id="dMeta"></p>
-      <p class="desc" id="dDesc"></p>
-      <div class="pills" id="dTech"></div>
-      <div class="stats" id="dStats"></div>
-      <div class="row" id="dRow"></div>
+      <div class="strip" id="dThumbs" data-rev="3"></div>
+
+      <p class="desc" id="dDesc" data-rev="4"></p>
+
+      <div id="dTechWrap" data-rev="5">
+        <div class="sect">Dibangun dengan</div>
+        <div class="tech" id="dTech"></div>
+      </div>
+      <div id="dStatsWrap" data-rev="6">
+        <div class="sect">Angka</div>
+        <div class="spec" id="dStats"></div>
+      </div>
+      <div class="act" id="dRow" data-rev="7"></div>
     </div>
   </div>
 </div>
@@ -347,14 +443,20 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     new THREE.SphereGeometry(600, 32, 20),
     new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
-      uniforms: { cTop: { value: C(PAL.skyTop) }, cMid: { value: C(PAL.skyMid) }, cLow: { value: C(PAL.skyLow) } },
+      uniforms: {
+        cTop: { value: C(PAL.skyTop) }, cMid: { value: C(PAL.skyMid) }, cLow: { value: C(PAL.skyLow) },
+        sunDir: { value: new THREE.Vector3(40, 22, 28).normalize() }
+      },
       vertexShader:
         "varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
       fragmentShader:
-        "varying vec3 vP; uniform vec3 cTop; uniform vec3 cMid; uniform vec3 cLow;" +
-        "void main(){ float h = normalize(vP).y;" +
+        "varying vec3 vP; uniform vec3 cTop; uniform vec3 cMid; uniform vec3 cLow; uniform vec3 sunDir;" +
+        "void main(){ vec3 d = normalize(vP); float h = d.y;" +
         "  vec3 c = mix(cLow, cMid, smoothstep(-0.02, 0.045, h));" +
         "  c = mix(c, cTop, smoothstep(0.04, 0.17, h));" +
+        "  float s = max(dot(d, sunDir), 0.0);" +
+        "  c += vec3(1.0, 0.87, 0.64) * (smoothstep(0.9982, 0.9993, s) * 1.35" +
+        "        + pow(s, 260.0) * 0.5 + pow(s, 14.0) * 0.09);" +
         "  gl_FragColor = vec4(c, 1.0); }"
     })
   );
@@ -362,13 +464,15 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   scene.add(sky);
 
   scene.add(new THREE.HemisphereLight(C(0xFFE3BC), C(PAL.sandDark), 0.45));
-  var sun = new THREE.DirectionalLight(C(0xFFF2DC), 0.85);
+  var sun = new THREE.DirectionalLight(C(0xFFE6BE), 1.18); // low angle -> less NdotL on the ground
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
   sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 160;
-  sun.shadow.camera.left = -30; sun.shadow.camera.right = 30;
-  sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30;
+  sun.shadow.camera.far = 220;
+  // the sun sits low for golden-hour rake, so shadows run long and the box
+  // has to be wider than the old overhead setup
+  sun.shadow.camera.left = -38; sun.shadow.camera.right = 38;
+  sun.shadow.camera.top = 38; sun.shadow.camera.bottom = -38;
   sun.shadow.bias = -0.0012;
   sun.shadow.normalBias = 0.03;
   scene.add(sun, sun.target);
@@ -512,6 +616,18 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   var boards = [];
   var texQueue = [];
 
+  // soft radial falloff, reused by every board's light pool
+  var spillTex = (function () {
+    var c = document.createElement("canvas"); c.width = c.height = 128;
+    var g = c.getContext("2d");
+    var gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, "rgba(255,255,255,1)");
+    gr.addColorStop(0.45, "rgba(255,255,255,0.42)");
+    gr.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  })();
+
   function labelTexture(p, big) {
     var w = 1024, h = big ? 150 : 130;
     var c = document.createElement("canvas"); c.width = w; c.height = h;
@@ -606,6 +722,15 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
       pb.position.set(wp.x, wp.y, wp.z);
       world.addBody(pb);
     });
+    var spillMat = new THREE.MeshBasicMaterial({
+      map: spillTex, color: C(parseInt(p.color.slice(1), 16)),
+      transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    var spill = new THREE.Mesh(new THREE.PlaneGeometry(FW + 9, 13), spillMat);
+    spill.rotation.x = -Math.PI / 2;
+    spill.position.set(0, 0.04, 4.4);
+    g.add(spill);
+
     var kerb = new THREE.Mesh(new THREE.BoxGeometry(FW + 0.6, 0.34, 2.6), stdMat(PAL.sandDark, false, 0.95));
     kerb.position.set(0, 0.17, 0.2);
     kerb.receiveShadow = true;
@@ -622,7 +747,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     var stand = new THREE.Vector3().copy(g.position).addScaledVector(normal, 7.5);
 
     var b = {
-      p: p, group: g, matA: matA, matB: matB, shotB: shotB, edge: edge, label: label,
+      p: p, group: g, matA: matA, matB: matB, shotB: shotB, edge: edge, label: label, spill: spillMat,
       stand: stand, glow: 0, visited: false,
       baseTex: null, gallery: null, galLoading: false,
       shotI: 0, nextI: 0, timer: 0, fade: 0, fading: false, dwell: 0
@@ -638,6 +763,8 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   more.forEach(function (p, i) {
     makeBoard(p, (i / more.length) * Math.PI * 2, R_OUTER, false, false);
   });
+  // catalogue position, flagship first -- what the sheet's "04 / 31" refers to
+  boards.forEach(function (b, i) { b.idx = i + 1; });
 
   // category gateposts on the outer ring, where each run of projects begins
   (function categorySigns() {
@@ -774,6 +901,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
       // a short dwell keeps a drive-by from kicking off a gallery download
       b.dwell += dt;
       if (b.dwell > 1.2) ensureGallery(b);
+      if (phase === "detail") continue; // reader drives the gallery, not the timer
       var tex = b.gallery;            // not `gal` -- that name is the detail-sheet gallery
       if (!tex || tex.length < 2) continue;
       if (b.fading) {
@@ -1124,7 +1252,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
           elBar.style.width = (seen / TOTAL * 100) + "%";
           blip(560 + seen * 12, 0.13, "triangle", 0.055);
         }
-        paintFocus(focused.p);
+        paintFocus(focused);
         elFocus.classList.add("on");
       } else {
         elFocus.classList.remove("on");
@@ -1140,6 +1268,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
         bd.group.position.y = bd.glow * 0.34;
         bd.matA.emissiveIntensity = 0.34 + bd.glow * 0.42;
         bd.matB.emissiveIntensity = bd.matA.emissiveIntensity;
+        bd.spill.opacity = bd.glow * 0.5;
         bd.edge.material.emissive.copy(bd.edge.material.color);
         bd.edge.material.emissiveIntensity = bd.glow * 0.55;
       }
@@ -1149,14 +1278,17 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   function kindLabel(p) {
     return p.kind === "flagship" ? "Karya Unggulan" : (CAT_LABEL[p.category] || p.category || "Eksperimen");
   }
-  function paintFocus(p) {
+  function paintFocus(b) {
+    var p = b.p;
     elFocus.style.setProperty("--proj", p.color);
     document.getElementById("fName").textContent = p.name;
     document.getElementById("fKind").textContent = kindLabel(p);
     document.getElementById("fTag").textContent = p.tagline || p.description || "";
     var nsh = (p.shots || []).length;
     document.getElementById("fShots").textContent = nsh > 1 ? nsh + " foto" : "";
+    document.getElementById("fPos").textContent = pad2(b.idx) + " / " + TOTAL;
   }
+  function pad2(v) { return (v < 10 ? "0" : "") + v; }
 
   // ---------------------------------------------------------------- gallery
   var gal = { shots: [], i: 0, name: "" };
@@ -1177,6 +1309,14 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     }
     // keep the active thumb in view by nudging the strip, not scrollIntoView,
     // which would also scroll the sheet behind it
+    // the physical board tracks the sheet, so picking a thumbnail changes the
+    // screenshot on the object you are parked in front of
+    if (focused && focused.gallery && focused.gallery[gal.i]) {
+      setBoardTex(focused, focused.gallery[gal.i]);
+      focused.shotI = gal.i;
+      focused.timer = 0; focused.fade = 0; focused.fading = false;
+      focused.matB.opacity = 0; focused.shotB.visible = false;
+    }
     var act = dThumbs.children[gal.i];
     if (act) {
       var l = act.offsetLeft, r = l + act.offsetWidth;
@@ -1223,97 +1363,140 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   var lastFocusEl = null;
   function openDetail() {
     if (!focused || phase !== "drive") return;
-    var p = focused.p;
-    var card = veilDetail.querySelector(".card");
-    card.style.setProperty("--proj", p.color);
+    var b = focused, p = b.p;
+    var sheet = document.getElementById("dSheet");
+    sheet.style.setProperty("--proj", p.color);
     veilDetail.style.setProperty("--proj", p.color);
-    initGallery(p);
+
+    document.getElementById("dIdx").textContent = pad2(b.idx);
+    document.getElementById("dTot").textContent = String(TOTAL);
     document.getElementById("dKind").textContent = kindLabel(p);
     document.getElementById("dName").textContent = p.name;
-    var sub = document.getElementById("dSub");
-    sub.textContent = p.tagline || "";
-    sub.style.display = p.tagline ? "" : "none";
-    var meta = document.getElementById("dMeta");
-    meta.textContent = p.meta || "";
-    meta.style.display = p.meta ? "" : "none";
+    document.getElementById("dSub").textContent = p.tagline || "";
+    document.getElementById("dMeta").textContent = p.meta || "";
     document.getElementById("dDesc").textContent = p.description || "";
+
     var tech = document.getElementById("dTech");
     tech.innerHTML = "";
     (p.tech || []).forEach(function (t) {
-      var s = document.createElement("span"); s.textContent = t; tech.appendChild(s);
+      var el = document.createElement("span"); el.textContent = t; tech.appendChild(el);
     });
-    tech.style.display = (p.tech || []).length ? "" : "none";
+    document.getElementById("dTechWrap").style.display = (p.tech || []).length ? "" : "none";
+
     var stats = document.getElementById("dStats");
     stats.innerHTML = "";
-    (p.stats || []).forEach(function (s) {
-      var d = document.createElement("div");
-      d.innerHTML = '<div class="k"></div><div class="v"></div>';
-      d.querySelector(".k").textContent = s.label;
-      d.querySelector(".v").textContent = s.value;
-      stats.appendChild(d);
+    (p.stats || []).forEach(function (st) {
+      var r = document.createElement("div"); r.className = "r";
+      var k = document.createElement("span"); k.className = "k"; k.textContent = st.label;
+      var d = document.createElement("span"); d.className = "d";
+      var v = document.createElement("span"); v.className = "v"; v.textContent = st.value;
+      r.appendChild(k); r.appendChild(d); r.appendChild(v);
+      stats.appendChild(r);
     });
-    stats.style.display = (p.stats || []).length ? "" : "none";
+    document.getElementById("dStatsWrap").style.display = (p.stats || []).length ? "" : "none";
+
     var row = document.getElementById("dRow");
     row.innerHTML = "";
     if (p.url) {
       var a = document.createElement("a");
-      a.className = "go"; a.href = p.url; a.target = "_blank"; a.rel = "noopener";
-      a.textContent = "Buka proyek";
+      a.className = "cta"; a.href = p.url; a.target = "_blank"; a.rel = "noopener";
+      a.innerHTML = 'Buka proyek <span class="arw">&#8594;</span>';
       row.appendChild(a);
     } else {
-      var n = document.createElement("div");
-      n.className = "locked";
-      n.textContent = "Proyek internal — belum ada tautan publik.";
-      row.appendChild(n);
+      var note = document.createElement("div");
+      note.className = "private";
+      note.textContent = "Proyek internal — belum ada tautan publik.";
+      row.appendChild(note);
     }
     var back = document.createElement("button");
-    back.className = "go ghost"; back.type = "button";
+    back.className = "quiet"; back.type = "button";
     back.textContent = "Kembali menyetir";
     back.addEventListener("click", closeDetail);
     row.appendChild(back);
 
+    initGallery(p);
+
     lastFocusEl = document.activeElement;
     veilDetail.hidden = false;
+    sheet.scrollTop = 0;
+    void veilDetail.offsetWidth;      // commit the un-opened state so it animates
+    veilDetail.classList.add("open");
+    elFocus.classList.add("hide");
     phase = "detail";
-    card.scrollTop = 0;
-    // preventScroll matters: focusing the CTA otherwise scrolls the sheet past
-    // the screenshot, which is the first thing the reader should see.
-    (row.querySelector("a,button") || back).focus({ preventScroll: true });
+    frameBoard(b);
+    camMode = "board";
+    sheet.focus({ preventScroll: true });
     blip(720, 0.1, "triangle", 0.05);
   }
+
   function closeDetail() {
     if (phase !== "detail") return;
-    veilDetail.hidden = true;
+    veilDetail.classList.remove("open");
+    elFocus.classList.remove("hide");
     phase = "drive";
+    camMode = "chase";
+    setTimeout(function () { if (phase !== "detail") veilDetail.hidden = true; }, 400);
     if (lastFocusEl && lastFocusEl.focus) lastFocusEl.focus();
   }
   function toggleDetail() {
     if (phase === "detail") closeDetail();
     else if (phase === "drive") openDetail();
   }
+  document.getElementById("dClose").addEventListener("click", closeDetail);
+
   veilDetail.addEventListener("click", function (e) { if (e.target === veilDetail) closeDetail(); });
 
   // ---------------------------------------------------------------- camera
-  var camGoal = new THREE.Vector3(), camLook = new THREE.Vector3();
+  var camGoal = new THREE.Vector3(), camLook = new THREE.Vector3(), camLookGoal = new THREE.Vector3();
   var camYaw = SPAWN_YAW, fwdV = new THREE.Vector3(), qTmp = new THREE.Quaternion();
+  var camMode = "chase", camFov = 58;
+  var UPV = new THREE.Vector3(0, 1, 0);
+  var boardCam = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   camera.position.set(SPAWN.x + 7, 8, SPAWN.z + 6);
+
+  // Park the camera in front of the board and aim slightly to its right, so the
+  // object sits in the clear half of the frame while the sheet covers the other.
+  function frameBoard(b) {
+    var big = b.p.kind === "flagship";
+    var normal = new THREE.Vector3(0, 0, 1).applyQuaternion(b.group.quaternion);
+    var right = new THREE.Vector3().crossVectors(UPV, normal).normalize();
+    var centre = new THREE.Vector3(b.group.position.x, big ? 5.4 : 4.0, b.group.position.z);
+    var wide = window.innerWidth > 720;
+    boardCam.look.copy(centre).addScaledVector(right, wide ? (big ? 3.6 : 2.7) : 0);
+    boardCam.pos.copy(centre)
+      .addScaledVector(normal, big ? 14.5 : 11.5)
+      .addScaledVector(UPV, big ? 1.4 : 1.0);
+  }
+
   function updateCamera(dt) {
-    qTmp.set(chassisBody.quaternion.x, chassisBody.quaternion.y, chassisBody.quaternion.z, chassisBody.quaternion.w);
-    fwdV.set(0, 0, 1).applyQuaternion(qTmp);
-    var yaw = Math.atan2(fwdV.x, fwdV.z);
-    var d = yaw - camYaw;
-    while (d > Math.PI) d -= Math.PI * 2;
-    while (d < -Math.PI) d += Math.PI * 2;
-    camYaw += d * Math.min(1, dt * 4.0);
-    var kmh = Math.abs(vehicle.currentVehicleSpeedKmHour);
-    var fast = Math.min(kmh / 100, 1);
-    var dist = 9.2 + fast * 3.2;
-    var p = chassisBody.position;
-    camGoal.set(p.x - Math.sin(camYaw) * dist, Math.max(p.y + 4.3 + fast * 0.7, 1.8), p.z - Math.cos(camYaw) * dist);
-    camera.position.lerp(camGoal, Math.min(1, dt * 5.5));
-    camLook.set(p.x, p.y + 1.15, p.z);
+    var k, fovGoal;
+    if (camMode === "board") {
+      k = Math.min(1, dt * 3.0);
+      camera.position.lerp(boardCam.pos, k);
+      camLook.lerp(boardCam.look, k);
+      fovGoal = 44;
+    } else {
+      qTmp.set(chassisBody.quaternion.x, chassisBody.quaternion.y, chassisBody.quaternion.z, chassisBody.quaternion.w);
+      fwdV.set(0, 0, 1).applyQuaternion(qTmp);
+      var yaw = Math.atan2(fwdV.x, fwdV.z);
+      var d = yaw - camYaw;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      camYaw += d * Math.min(1, dt * 4.0);
+      var kmh = Math.abs(vehicle.currentVehicleSpeedKmHour);
+      var fast = Math.min(kmh / 100, 1);
+      var dist = 9.2 + fast * 3.2;
+      var p = chassisBody.position;
+      camGoal.set(p.x - Math.sin(camYaw) * dist, Math.max(p.y + 4.3 + fast * 0.7, 1.8), p.z - Math.cos(camYaw) * dist);
+      k = Math.min(1, dt * 5.5);
+      camera.position.lerp(camGoal, k);
+      camLookGoal.set(p.x, p.y + 1.15, p.z);
+      camLook.lerp(camLookGoal, k);
+      fovGoal = 58 + fast * 7;
+    }
     camera.lookAt(camLook);
-    camera.fov = 58 + fast * 7;
+    camFov += (fovGoal - camFov) * Math.min(1, dt * 3.4);
+    camera.fov = camFov;
     camera.updateProjectionMatrix();
   }
 
@@ -1347,7 +1530,7 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     if (spd !== lastSpd) { elSpd.textContent = String(spd); lastSpd = spd; }
 
     var cp = chassisBody.position;
-    sun.position.set(cp.x + 24, 42, cp.z + 16);
+    sun.position.set(cp.x + 40, 22, cp.z + 28); // matches sunDir in the sky shader
     sun.target.position.set(cp.x, 0, cp.z);
     sun.target.updateMatrixWorld();
     sky.position.copy(camera.position);
@@ -1359,7 +1542,9 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
   // ---------------------------------------------------------------- wiring
   document.getElementById("btnStart").addEventListener("click", function () {
     audio();
-    document.getElementById("veilIntro").hidden = true;
+    var vi = document.getElementById("veilIntro");
+    vi.classList.remove("open");
+    setTimeout(function () { vi.hidden = true; }, 400);
     document.getElementById("rail").classList.add("on");
     document.getElementById("mute").classList.add("on");
     phase = "drive";
@@ -1374,6 +1559,9 @@ a.go:focus-visible,button.go:focus-visible{outline:3px solid var(--gold-hot);out
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
+
+  // let the un-opened state commit so the intro fades in rather than snapping
+  requestAnimationFrame(function () { document.getElementById("veilIntro").classList.add("open"); });
 
   frame();
 })();
