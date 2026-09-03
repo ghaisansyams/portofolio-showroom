@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1B1726">
 <title>Diecast Showroom</title>
-<meta name="description" content="Portofolio Ghaisan yang bisa dikendarai — 31 proyek berdiri sebagai papan di halaman 3D, datanya ditarik langsung dari ghaisansyams.vercel.app.">
+<meta name="description" content="Portofolio Ghaisan yang bisa dikendarai — 31 proyek berdiri sebagai panel menyala di balai pamer 3D, datanya ditarik langsung dari ghaisansyams.vercel.app.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%9B%9E</text></svg>">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Diecast Showroom">
-<meta property="og:description" content="Portofolio Ghaisan yang bisa dikendarai — 31 proyek berdiri sebagai papan di halaman 3D.">
+<meta property="og:description" content="Portofolio Ghaisan yang bisa dikendarai — 31 proyek berdiri sebagai panel menyala di balai pamer 3D.">
 <meta property="og:url" content="https://diecast-showroom.vercel.app">
 <meta property="og:image" content="https://diecast-showroom.vercel.app/preview.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -50,7 +50,9 @@ canvas#scene{position:fixed;inset:0;display:block;width:100%;height:100%}
 /* corner falloff so the render sits in the page instead of on top of it */
 .grade{
   position:fixed;inset:0;z-index:4;pointer-events:none;
-  background:radial-gradient(128% 92% at 50% 40%, rgba(0,0,0,0) 44%, rgba(24,14,34,.52) 100%);
+  background:
+    linear-gradient(to bottom, rgba(12,10,20,.62) 0, rgba(12,10,20,0) 140px),
+    radial-gradient(128% 92% at 50% 40%, rgba(0,0,0,0) 44%, rgba(18,12,28,.58) 100%);
 }
 
 kbd{
@@ -355,18 +357,18 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
 <div class="veil intro" id="veilIntro">
   <div class="sheet">
     <div class="sheet-inner">
-      <div class="idx"><b id="introN">31</b><span class="sep">/</span><span>proyek berdiri di halaman</span></div>
+      <div class="idx"><b id="introN">31</b><span class="sep">/</span><span>proyek berdiri di balai</span></div>
       <div class="rule"></div>
       <h1>Diecast Showroom</h1>
-      <p class="sub">Portofolio yang bisa dikendarai.</p>
-      <p class="desc">Halaman pamer setinggi mobil mainan. Karya unggulan berdiri di lingkar dalam menghadap keluar, eksperimen di lingkar luar menghadap ke dalam, dan boulevard beraspal memisahkan keduanya. Berhentilah di depan papan mana pun untuk membacanya.</p>
+      <p class="sub">Portofolio yang bisa dikendarai, sesudah jam tutup.</p>
+      <p class="desc">Balai pamer yang sudah sepi, lampunya masih menyala. Karya unggulan berdiri di lingkar dalam menghadap keluar, eksperimen di lingkar luar menghadap ke dalam, dan satu lajur bercahaya memisahkan keduanya. Berhentilah di depan panel mana pun untuk membacanya.</p>
       <div class="sect">Kendali</div>
       <div class="keys">
         <div class="r"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> berkendara</div>
         <div class="r"><kbd>E</kbd> buka detail papan terdekat</div>
         <div class="r"><kbd>Space</kbd> rem tangan <span class="sep">&middot;</span> <kbd>R</kbd> balikkan mobil</div>
       </div>
-      <div class="act"><button class="cta" id="btnStart" type="button">Masuk halaman <span class="arw">&#8594;</span></button></div>
+      <div class="act"><button class="cta" id="btnStart" type="button">Masuk balai <span class="arw">&#8594;</span></button></div>
       <p class="src">Data proyek ditarik dari <a href="https://ghaisansyams.vercel.app" target="_blank" rel="noopener">ghaisansyams.vercel.app</a> lewat <code>scripts/sync-portfolio.mjs</code>; gambarnya dimuat langsung dari sana, jadi ikut terbarui sendiri.</p>
     </div>
   </div>
@@ -419,11 +421,16 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
   // ---------------------------------------------------------------- palette
   // Authored in sRGB, converted to linear because the renderer outputs sRGB.
   var C = function (hex) { return new THREE.Color(hex).convertSRGBToLinear(); };
+  // Diecast Rally is a sunlit playmat; this is the same car in a hall after
+  // closing time. Cool dark floor, warm rig light, and screenshots that read as
+  // backlit panels rather than posters in daylight.
   var PAL = {
-    sand: 0xC9B893, sandDark: 0xB0A07C, red: 0xE8402A, teal: 0x2FB5A0,
-    yellow: 0xF2C230, bone: 0xEDE6D6, ink: 0x2A2436, gold: 0xFFD34E,
-    skyTop: 0x33408A, skyMid: 0xC9563F, skyLow: 0xFFC77A, haze: 0xE9A867,
-    asphalt: 0x8E8168
+    floor: 0x1B1828, floorDeep: 0x121020, seam: 0x2C2740,
+    wall: 0x16131F, rail: 0xFFC28A,
+    chrome: 0xDDE1F0, glass: 0x171528, ink: 0x0E0C16,
+    lamp: 0xFFD9A8, cool: 0x7E8CC4, accent: 0xFFC77A,
+    voidTop: 0x0A0812, voidMid: 0x14111F, voidLow: 0x241F38,
+    haze: 0x110E1C
   };
 
   // ---------------------------------------------------------------- renderer
@@ -436,7 +443,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   var scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(C(PAL.haze), 110, 400);
+  scene.fog = new THREE.Fog(C(PAL.haze), 55, 235); // distant stands fall away into the dark
   var camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.5, 1200);
 
   var sky = new THREE.Mesh(
@@ -444,35 +451,38 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
     new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
       uniforms: {
-        cTop: { value: C(PAL.skyTop) }, cMid: { value: C(PAL.skyMid) }, cLow: { value: C(PAL.skyLow) },
-        sunDir: { value: new THREE.Vector3(40, 22, 28).normalize() }
+        cTop: { value: C(PAL.voidTop) }, cMid: { value: C(PAL.voidMid) }, cLow: { value: C(PAL.voidLow) }
       },
       vertexShader:
         "varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
       fragmentShader:
-        "varying vec3 vP; uniform vec3 cTop; uniform vec3 cMid; uniform vec3 cLow; uniform vec3 sunDir;" +
+        "varying vec3 vP; uniform vec3 cTop; uniform vec3 cMid; uniform vec3 cLow;" +
         "void main(){ vec3 d = normalize(vP); float h = d.y;" +
-        "  vec3 c = mix(cLow, cMid, smoothstep(-0.02, 0.045, h));" +
-        "  c = mix(c, cTop, smoothstep(0.04, 0.17, h));" +
-        "  float s = max(dot(d, sunDir), 0.0);" +
-        "  c += vec3(1.0, 0.87, 0.64) * (smoothstep(0.9982, 0.9993, s) * 1.35" +
-        "        + pow(s, 260.0) * 0.5 + pow(s, 14.0) * 0.09);" +
+        "  vec3 c = mix(cLow, cMid, smoothstep(-0.30, 0.03, h));" +
+        "  c = mix(c, cTop, smoothstep(0.0, 0.6, h));" +
+        // a warm seam right on the horizon reads as the far end of a lit hall
+        "  c += vec3(1.0, 0.80, 0.55) * pow(max(1.0 - abs(h * 8.0), 0.0), 3.0) * 0.13;" +
         "  gl_FragColor = vec4(c, 1.0); }"
     })
   );
   sky.frustumCulled = false;
   scene.add(sky);
 
-  scene.add(new THREE.HemisphereLight(C(0xFFE3BC), C(PAL.sandDark), 0.45));
-  var sun = new THREE.DirectionalLight(C(0xFFE6BE), 1.18); // low angle -> less NdotL on the ground
+  // No image-based lighting here. PMREM over this dome blew the whole floor out
+  // to white, and without an environment `metalness` only makes a surface darker
+  // -- there is nothing to reflect. So every material stays near-dielectric and
+  // the polish comes from the rig light's specular highlight instead.
+
+  scene.add(new THREE.HemisphereLight(C(PAL.cool), C(PAL.floorDeep), 0.42));
+  var sun = new THREE.DirectionalLight(C(PAL.lamp), 1.25); // ceiling rig: high and warm
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 220;
-  // the sun sits low for golden-hour rake, so shadows run long and the box
-  // has to be wider than the old overhead setup
-  sun.shadow.camera.left = -38; sun.shadow.camera.right = 38;
-  sun.shadow.camera.top = 38; sun.shadow.camera.bottom = -38;
+  // overhead rig -> short shadows pooled under each object, so the box can be
+  // tight and the 1024 map stays sharp
+  sun.shadow.camera.left = -26; sun.shadow.camera.right = 26;
+  sun.shadow.camera.top = 26; sun.shadow.camera.bottom = -26;
   sun.shadow.bias = -0.0012;
   sun.shadow.normalBias = 0.03;
   scene.add(sun, sun.target);
@@ -496,29 +506,32 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
   }
 
   // ---------------------------------------------------------------- ground
-  function playmatTexture() {
+  // poured terrazzo: dark base, sparse pale chips, wide slab seams
+  function floorTexture() {
     var c = document.createElement("canvas"); c.width = c.height = 256;
     var g = c.getContext("2d");
-    g.fillStyle = "#C9B893"; g.fillRect(0, 0, 256, 256);
-    g.strokeStyle = "rgba(120,102,72,0.30)"; g.lineWidth = 1;
-    for (var i = 0; i <= 256; i += 64) {
-      g.beginPath(); g.moveTo(i + 0.5, 0); g.lineTo(i + 0.5, 256); g.stroke();
-      g.beginPath(); g.moveTo(0, i + 0.5); g.lineTo(256, i + 0.5); g.stroke();
+    g.fillStyle = "#1B1828"; g.fillRect(0, 0, 256, 256);
+    for (var n = 0; n < 520; n++) {
+      var v = Math.random();
+      g.fillStyle = v > 0.86 ? "rgba(196,188,214,0.30)"
+                 : v > 0.55 ? "rgba(126,140,196,0.13)"
+                            : "rgba(10,8,18,0.36)";
+      var r = 1 + (Math.random() * 2 | 0);
+      g.fillRect(Math.random() * 256 | 0, Math.random() * 256 | 0, r, r);
     }
-    for (var n = 0; n < 900; n++) {
-      g.fillStyle = "rgba(" + (n % 3 ? 168 : 214) + "," + (n % 3 ? 152 : 202) + "," + (n % 3 ? 116 : 166) + ",0.5)";
-      g.fillRect(Math.random() * 256 | 0, Math.random() * 256 | 0, 2, 2);
-    }
+    g.strokeStyle = "rgba(44,39,64,0.85)"; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(0, 1); g.lineTo(256, 1); g.stroke();
+    g.beginPath(); g.moveTo(1, 0); g.lineTo(1, 256); g.stroke();
     var t = new THREE.CanvasTexture(c);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(60, 60);
+    t.repeat.set(42, 42);
     t.anisotropy = renderer.capabilities.getMaxAnisotropy();
     t.encoding = THREE.sRGBEncoding;
     return t;
   }
   var floor = new THREE.Mesh(
     new THREE.PlaneGeometry(600, 600),
-    new THREE.MeshStandardMaterial({ map: playmatTexture(), roughness: 0.98, metalness: 0 })
+    new THREE.MeshStandardMaterial({ map: floorTexture(), roughness: 0.34, metalness: 0.06 })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
@@ -531,16 +544,17 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
 
   // ---------------------------------------------------------------- builders
   var matCache = {};
-  function stdMat(hex, flat, rough) {
-    var key = hex + "|" + (flat ? 1 : 0) + "|" + (rough || 0.8);
+  function stdMat(hex, flat, rough, metal) {
+    var r = rough || 0.8, m = metal === undefined ? 0.02 : metal;
+    var key = hex + "|" + (flat ? 1 : 0) + "|" + r + "|" + m;
     if (!matCache[key]) matCache[key] = new THREE.MeshStandardMaterial({
-      color: C(hex), flatShading: !!flat, roughness: rough || 0.8, metalness: 0.02
+      color: C(hex), flatShading: !!flat, roughness: r, metalness: m
     });
     return matCache[key];
   }
   function box(sx, sy, sz, px, py, pz, opt) {
     opt = opt || {};
-    var mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), stdMat(opt.color, opt.flat, opt.rough));
+    var mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), stdMat(opt.color, opt.flat, opt.rough, opt.metal));
     mesh.castShadow = true; mesh.receiveShadow = true;
     mesh.position.set(px, py, pz);
     scene.add(mesh);
@@ -560,16 +574,16 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
 
   // ---------------------------------------------------------------- arena
   var EDGE = 92;
-  (function barriers() {
-    var seg = 6;
-    for (var s = -EDGE; s < EDGE; s += seg) {
-      var alt = (Math.round(s / seg)) % 2 === 0;
-      var a = alt ? PAL.bone : PAL.red, b = alt ? PAL.red : PAL.bone;
-      box(seg - 0.3, 2.4, 1.2, s + seg / 2, 1.2, -EDGE, { color: a });
-      box(seg - 0.3, 2.4, 1.2, s + seg / 2, 1.2, EDGE, { color: b });
-      box(1.2, 2.4, seg - 0.3, -EDGE, 1.2, s + seg / 2, { color: b });
-      box(1.2, 2.4, seg - 0.3, EDGE, 1.2, s + seg / 2, { color: a });
-    }
+  (function walls() {
+    var H = 2.6, T = 1.4, SPAN = EDGE * 2 + T;
+    var railMat = new THREE.MeshBasicMaterial({ color: C(PAL.rail) });
+    [[0, -EDGE, SPAN, T], [0, EDGE, SPAN, T], [-EDGE, 0, T, SPAN], [EDGE, 0, T, SPAN]]
+      .forEach(function (w) {
+        box(w[2], H, w[3], w[0], H / 2, w[1], { color: PAL.wall, rough: 0.42, metal: 0.05 });
+        var strip = new THREE.Mesh(new THREE.BoxGeometry(w[2] * 0.99, 0.08, w[3] * 0.99), railMat);
+        strip.position.set(w[0], H + 0.05, w[1]);
+        scene.add(strip);
+      });
   })();
 
   // The showroom is two concentric rings with a driveable avenue between them.
@@ -577,26 +591,25 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
 
   // Painted avenue ring — a wide flat band so the driving line reads from afar.
   (function avenue() {
-    var ring = new THREE.Mesh(
-      new THREE.RingGeometry(R_INNER + 4, R_OUTER - 4, 96),
-      new THREE.MeshStandardMaterial({ color: C(PAL.asphalt), roughness: 0.95, transparent: true, opacity: 0.55 })
+    var lane = new THREE.Mesh(
+      new THREE.RingGeometry(R_INNER + 4, R_OUTER - 4, 128),
+      new THREE.MeshStandardMaterial({ color: C(0x2A2637), roughness: 0.22, metalness: 0.08 })
     );
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.y = 0.02;
-    ring.receiveShadow = true;
-    scene.add(ring);
+    lane.rotation.x = -Math.PI / 2;
+    lane.position.y = 0.02;
+    lane.receiveShadow = true;
+    scene.add(lane);
 
-    // dashed centre line
-    var dash = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.04, 0.5), stdMat(PAL.bone, false, 0.9));
-    var mid = (R_INNER + R_OUTER) / 2;
-    for (var i = 0; i < 72; i++) {
-      var a = (i / 72) * Math.PI * 2;
-      var d = dash.clone();
-      d.position.set(Math.sin(a) * mid, 0.05, Math.cos(a) * mid);
-      d.rotation.y = a + Math.PI / 2;
-      d.receiveShadow = true;
-      scene.add(d);
-    }
+    // inlaid light strips mark the lane edges instead of painted dashes
+    [R_INNER + 4.5, R_OUTER - 4.5].forEach(function (r) {
+      var g = new THREE.Mesh(
+        new THREE.RingGeometry(r - 0.1, r + 0.1, 160),
+        new THREE.MeshBasicMaterial({ color: C(PAL.rail), transparent: true, opacity: 0.6 })
+      );
+      g.rotation.x = -Math.PI / 2;
+      g.position.y = 0.055;
+      scene.add(g);
+    });
   })();
 
   // ---------------------------------------------------------------- boards
@@ -666,12 +679,15 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
     scene.add(g);
 
     // frame in the project's own accent colour
-    var frame = new THREE.Mesh(new THREE.BoxGeometry(FW, FH, 0.34), stdMat(PAL.ink, false, 0.75));
+    var frame = new THREE.Mesh(new THREE.BoxGeometry(FW, FH, 0.34), stdMat(PAL.ink, false, 0.34, 0.07));
     frame.position.y = base + FH / 2;
     frame.castShadow = true; frame.receiveShadow = true;
     g.add(frame);
     var edge = new THREE.Mesh(new THREE.BoxGeometry(FW + 0.24, FH + 0.24, 0.2),
-      new THREE.MeshStandardMaterial({ color: C(parseInt(p.color.slice(1), 16)), roughness: 0.55, metalness: 0.05 }));
+      new THREE.MeshStandardMaterial({
+        color: C(parseInt(p.color.slice(1), 16)), roughness: 0.4, metalness: 0.06,
+        emissive: C(parseInt(p.color.slice(1), 16)), emissiveIntensity: 0.16
+      }));
     edge.position.set(0, base + FH / 2, -0.09);
     edge.castShadow = true;
     g.add(edge);
@@ -682,7 +698,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
     function shotMat() {
       return new THREE.MeshStandardMaterial({
         color: 0xffffff, roughness: 0.95, metalness: 0,
-        emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.34
+        emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.62
       });
     }
     var matA = shotMat(), matB = shotMat();
@@ -704,7 +720,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
 
     var lt = labelTexture(p, big);
     var label = new THREE.Mesh(new THREE.PlaneGeometry(IW, LH),
-      new THREE.MeshStandardMaterial({ map: lt, emissive: new THREE.Color(0xffffff), emissiveMap: lt, emissiveIntensity: 0.5, roughness: 1 }));
+      new THREE.MeshStandardMaterial({ map: lt, emissive: new THREE.Color(0xffffff), emissiveMap: lt, emissiveIntensity: 0.8, roughness: 1 }));
     label.position.set(0, base + pad + LH / 2, 0.18);
     g.add(label);
 
@@ -712,7 +728,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
     var postH = base + 0.4;
     [-1, 1].forEach(function (s) {
       var px = s * (FW / 2 - 0.7);
-      var post = new THREE.Mesh(new THREE.BoxGeometry(0.42, postH, 0.42), stdMat(PAL.ink, false, 0.8));
+      var post = new THREE.Mesh(new THREE.BoxGeometry(0.42, postH, 0.42), stdMat(PAL.wall, false, 0.32, 0.08));
       post.position.set(px, postH / 2, 0);
       post.castShadow = true;
       g.add(post);
@@ -731,7 +747,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
     spill.position.set(0, 0.04, 4.4);
     g.add(spill);
 
-    var kerb = new THREE.Mesh(new THREE.BoxGeometry(FW + 0.6, 0.34, 2.6), stdMat(PAL.sandDark, false, 0.95));
+    var kerb = new THREE.Mesh(new THREE.BoxGeometry(FW + 0.6, 0.34, 2.6), stdMat(PAL.seam, false, 0.34, 0.07));
     kerb.position.set(0, 0.17, 0.2);
     kerb.receiveShadow = true;
     g.add(kerb);
@@ -776,8 +792,8 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
       var x = Math.sin(a) * (R_OUTER + 6.5), z = Math.cos(a) * (R_OUTER + 6.5);
       var c = document.createElement("canvas"); c.width = 512; c.height = 128;
       var g2 = c.getContext("2d");
-      g2.fillStyle = "#241E33"; g2.fillRect(0, 0, 512, 128);
-      g2.fillStyle = "#FFC77A";
+      g2.fillStyle = "#12101C"; g2.fillRect(0, 0, 512, 128);
+      g2.fillStyle = "#FFC28A";
       g2.font = "800 58px 'Bricolage Grotesque', Arial, sans-serif";
       g2.textAlign = "center"; g2.textBaseline = "middle";
       g2.fillText((CAT_LABEL[p.category] || p.category).toUpperCase(), 256, 68);
@@ -785,10 +801,10 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
       var sign = new THREE.Group();
       sign.position.set(x, 0, z);
       sign.rotation.y = a + Math.PI;
-      var post = new THREE.Mesh(new THREE.BoxGeometry(0.5, 7, 0.5), stdMat(PAL.ink, false, 0.8));
+      var post = new THREE.Mesh(new THREE.BoxGeometry(0.5, 7, 0.5), stdMat(PAL.wall, false, 0.3, 0.08));
       post.position.y = 3.5; post.castShadow = true;
       var plate = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.6),
-        new THREE.MeshStandardMaterial({ map: t, emissive: new THREE.Color(0xffffff), emissiveMap: t, emissiveIntensity: 0.5, roughness: 1 }));
+        new THREE.MeshStandardMaterial({ map: t, emissive: new THREE.Color(0xffffff), emissiveMap: t, emissiveIntensity: 0.85, roughness: 1 }));
       plate.position.set(0, 7.4, 0.05);
       sign.add(post, plate);
       scene.add(sign);
@@ -943,77 +959,77 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
 
   // ---------------------------------------------------------------- plaza
   (function plaza() {
-    // stepped centrepiece
-    box(14, 0.5, 14, 0, 0.25, 0, { color: PAL.sandDark });
-    box(10, 0.5, 10, 0, 0.75, 0, { color: PAL.bone });
-    box(6, 0.5, 6, 0, 1.25, 0, { color: PAL.teal });
-    box(2.4, 6, 2.4, 0, 4.5, 0, { color: PAL.red, flat: true });
-    box(3.6, 0.6, 3.6, 0, 7.8, 0, { color: PAL.gold, flat: true });
+    box(17, 0.4, 17, 0, 0.2, 0, { color: PAL.seam, rough: 0.3, metal: 0.07 });
+    var rim = new THREE.Mesh(
+      new THREE.RingGeometry(8.2, 8.5, 96),
+      new THREE.MeshBasicMaterial({ color: C(PAL.rail), transparent: true, opacity: 0.7 })
+    );
+    rim.rotation.x = -Math.PI / 2; rim.position.y = 0.42; scene.add(rim);
+
+    box(1.6, 13, 1.6, 0, 6.9, 0, { color: PAL.wall, rough: 0.3, metal: 0.08 });
+    var band = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.16, 1.78),
+      new THREE.MeshBasicMaterial({ color: C(PAL.rail) }));
+    band.position.y = 12.4; scene.add(band);
 
     var c = document.createElement("canvas"); c.width = 512; c.height = 128;
     var g = c.getContext("2d");
-    g.fillStyle = "#241E33"; g.fillRect(0, 0, 512, 128);
-    g.fillStyle = "#FFD34E";
+    g.fillStyle = "#12101C"; g.fillRect(0, 0, 512, 128);
+    g.fillStyle = "#FFC28A";
     g.font = "800 54px 'Bricolage Grotesque', Arial, sans-serif";
     g.textAlign = "center"; g.textBaseline = "middle";
     g.fillText("GHAISAN", 256, 66);
     var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
     for (var i = 0; i < 4; i++) {
       var pl = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8),
-        new THREE.MeshStandardMaterial({ map: t, emissive: new THREE.Color(0xffffff), emissiveMap: t, emissiveIntensity: 0.55, roughness: 1 }));
+        new THREE.MeshStandardMaterial({ map: t, emissive: new THREE.Color(0xffffff), emissiveMap: t, emissiveIntensity: 0.9, roughness: 1 }));
       var a = i * Math.PI / 2;
-      pl.position.set(Math.sin(a) * 1.25, 5.4, Math.cos(a) * 1.25);
+      pl.position.set(Math.sin(a) * 0.85, 9.6, Math.cos(a) * 0.85);
       pl.rotation.y = a;
       scene.add(pl);
     }
 
-    // launch ramps, placed by top surface: centre_y = L*sin(t) - h*cos(t)
-    box(7, 0.6, 6, -18, 0.8919, 12, { color: PAL.yellow, rotX: 0.4 });
-    box(7, 0.6, 6, 18, 0.8919, -12, { color: PAL.yellow, rotX: -0.4 });
+    // display ramps, placed by top surface: centre_y = L*sin(t) - h*cos(t)
+    [[-18, 12, 0.4], [18, -12, -0.4]].forEach(function (r) {
+      box(7, 0.6, 6, r[0], 0.8919, r[1], { color: PAL.seam, rotX: r[2], rough: 0.26, metal: 0.07 });
+      var lip = new THREE.Mesh(new THREE.BoxGeometry(7, 0.09, 0.24),
+        new THREE.MeshBasicMaterial({ color: C(PAL.rail), transparent: true, opacity: 0.75 }));
+      lip.position.set(r[0], 3.09, r[1] + (r[2] > 0 ? -5.8 : 5.8));
+      scene.add(lip);
+    });
   })();
 
   // ---------------------------------------------------------------- props
   (function props() {
-    function brickWall(cx, cz, cols, rows, rotY) {
-      var w = 1.1, h = 0.85, hues = [PAL.bone, PAL.yellow, PAL.teal, PAL.red];
-      for (var r = 0; r < rows; r++) {
-        var off = (r % 2) * (w / 2);
-        for (var c2 = 0; c2 < cols; c2++) {
-          var lx = (c2 - (cols - 1) / 2) * (w + 0.04) + off;
-          box(w, h, 0.55, cx + lx * Math.cos(rotY), h / 2 + r * h + 0.02, cz - lx * Math.sin(rotY),
-              { color: hues[(r + c2) % hues.length], mass: 1.4, rotY: rotY });
-        }
-      }
-    }
-    brickWall(0, 82, 7, 4, 0);
-    brickWall(-82, 0, 7, 4, Math.PI / 2);
-    brickWall(60, -60, 6, 3, 0.7);
-
-    var coneGeo = new THREE.ConeGeometry(0.52, 1.5, 10);
-    coneGeo.translate(0, 0.05, 0);
-    function cone(x, z) {
+    // A gallery is not a playground: the brick stacks and traffic cones that make
+    // sense in Diecast Rally are gone. What is left is stanchions -- still
+    // knockable, but they read as floor furniture instead of roadworks.
+    var capMat = new THREE.MeshBasicMaterial({ color: C(PAL.rail) });
+    function stanchion(x, z) {
       var g = new THREE.Group();
-      var c3 = new THREE.Mesh(coneGeo, stdMat(PAL.red, true, 0.85));
-      var base = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.16, 1.15), stdMat(PAL.ink, false, 0.9));
-      base.position.y = -0.72;
-      c3.castShadow = base.castShadow = true;
-      g.add(c3, base);
-      g.position.set(x, 0.8, z);
+      var post = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.5, 0.4), stdMat(PAL.wall, false, 0.3, 0.08));
+      var cap = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.1, 0.56), capMat);
+      cap.position.y = 0.8;
+      var base = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.14, 0.86), stdMat(PAL.ink, false, 0.4, 0.06));
+      base.position.y = -0.76;
+      post.castShadow = base.castShadow = true;
+      g.add(post, cap, base);
+      g.position.set(x, 0.84, z);
       scene.add(g);
-      var b = new CANNON.Body({ mass: 1.1, material: propMat });
-      b.addShape(new CANNON.Box(new CANNON.Vec3(0.45, 0.78, 0.45)));
-      b.position.set(x, 0.8, z);
-      b.angularDamping = 0.3; b.allowSleep = true;
+      var b = new CANNON.Body({ mass: 1.2, material: propMat });
+      b.addShape(new CANNON.Box(new CANNON.Vec3(0.28, 0.82, 0.28)));
+      b.position.set(x, 0.84, z);
+      b.angularDamping = 0.32;
+      b.allowSleep = true;
       world.addBody(b);
       link(g, b);
     }
-    // a slalom through the avenue, plus scatter in the outer field
-    for (var i = 0; i < 12; i++) {
-      var a = (i / 12) * Math.PI * 2 + 0.13;
-      cone(Math.sin(a) * 52, Math.cos(a) * 52);
+    // a loose guard of posts around the plaza rim and near the outer wall
+    for (var i = 0; i < 8; i++) {
+      var a = (i / 8) * Math.PI * 2 + 0.2;
+      stanchion(Math.sin(a) * 22, Math.cos(a) * 22);
     }
-    [[80, 20], [83, 26], [-70, 60], [-74, 64], [40, 80], [-30, -80], [-34, -84]]
-      .forEach(function (p) { cone(p[0], p[1]); });
+    [[80, 22], [83, 27], [-72, 62], [-76, 66], [42, 80], [-32, -80]]
+      .forEach(function (q) { stanchion(q[0], q[1]); });
   })();
 
   // ---------------------------------------------------------------- the car
@@ -1027,25 +1043,26 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
   var carGroup = new THREE.Group();
   scene.add(carGroup);
   (function buildCarMesh() {
-    var shell = stdMat(PAL.red, false, 0.42), trim = stdMat(PAL.ink, false, 0.7);
+    var shell = stdMat(PAL.chrome, false, 0.22, 0.05), trim = stdMat(PAL.ink, false, 0.4, 0.06);
+    var lampMat = new THREE.MeshBasicMaterial({ color: C(PAL.lamp) });
     var lower = new THREE.Mesh(new THREE.BoxGeometry(CHASSIS.x * 2, CHASSIS.y * 2, CHASSIS.z * 2), shell);
     var cabin = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.62, 2.0), shell);
     cabin.position.set(0, 0.47, -0.16);
-    var glass = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.34, 1.05), stdMat(0x2B3550, false, 0.25));
+    var glass = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.34, 1.05), stdMat(PAL.glass, false, 0.1, 0.12));
     glass.position.set(0, 0.56, 0.42);
     var scoop = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.22, 0.55), trim);
     scoop.position.set(0, 0.44, 1.2);
-    var wing = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.14, 0.5), stdMat(PAL.bone, false, 0.6));
+    var wing = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.14, 0.5), stdMat(PAL.chrome, false, 0.2, 0.06));
     wing.position.set(0, 0.72, -1.75);
     var wingL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.4, 0.3), trim);
     wingL.position.set(-0.66, 0.5, -1.75);
     var wingR = wingL.clone(); wingR.position.x = 0.66;
-    var bumper = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.24, 0.3), stdMat(PAL.bone, false, 0.6));
+    var bumper = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.24, 0.3), stdMat(PAL.ink, false, 0.36, 0.06));
     bumper.position.set(0, -0.06, 2.02);
-    var lampL = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.22, 0.12), stdMat(PAL.gold, false, 0.3));
+    var lampL = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.22, 0.12), lampMat);
     lampL.position.set(-0.5, 0.22, 2.02);
     var lampR = lampL.clone(); lampR.position.x = 0.5;
-    var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 1.05), stdMat(PAL.bone, false, 0.6));
+    var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 1.05), stdMat(PAL.accent, false, 0.32, 0.05));
     stripe.position.set(0, CHASSIS.y + 0.01, 1.42);
     [lower, cabin, glass, scoop, wing, wingL, wingR, bumper, lampL, lampR, stripe].forEach(function (m) {
       m.castShadow = true; carGroup.add(m);
@@ -1081,12 +1098,12 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
   (function buildWheels() {
     var g = new THREE.CylinderGeometry(WHEEL_R, WHEEL_R, 0.42, 16);
     g.rotateZ(Math.PI / 2); // spin axis -> local X, matching axleLocal
-    var tyre = stdMat(0x1F1B29, false, 0.92);
+    var tyre = stdMat(0x14121C, false, 0.78, 0.03);
     var hubGeo = new THREE.BoxGeometry(0.46, 0.5, 0.5);
     for (var i = 0; i < 4; i++) {
       var grp = new THREE.Group();
       var t = new THREE.Mesh(g, tyre); t.castShadow = true;
-      grp.add(t, new THREE.Mesh(hubGeo, stdMat(PAL.bone, false, 0.5)));
+      grp.add(t, new THREE.Mesh(hubGeo, stdMat(PAL.chrome, false, 0.18, 0.06)));
       scene.add(grp);
       wheelMeshes.push(grp);
     }
@@ -1266,11 +1283,10 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
         bd.glow += (target - bd.glow) * Math.min(1, dt * 6);
         if (Math.abs(bd.glow - target) < 0.005) bd.glow = target;
         bd.group.position.y = bd.glow * 0.34;
-        bd.matA.emissiveIntensity = 0.34 + bd.glow * 0.42;
+        bd.matA.emissiveIntensity = 0.62 + bd.glow * 0.45;
         bd.matB.emissiveIntensity = bd.matA.emissiveIntensity;
-        bd.spill.opacity = bd.glow * 0.5;
-        bd.edge.material.emissive.copy(bd.edge.material.color);
-        bd.edge.material.emissiveIntensity = bd.glow * 0.55;
+        bd.edge.material.emissiveIntensity = 0.16 + bd.glow * 0.6;
+        bd.spill.opacity = bd.glow * 0.62;
       }
     }
   }
@@ -1530,7 +1546,7 @@ button.quiet:focus-visible{outline:2px solid var(--gold-hot);outline-offset:2px}
     if (spd !== lastSpd) { elSpd.textContent = String(spd); lastSpd = spd; }
 
     var cp = chassisBody.position;
-    sun.position.set(cp.x + 40, 22, cp.z + 28); // matches sunDir in the sky shader
+    sun.position.set(cp.x + 11, 48, cp.z + 15); // steep, like a hall gantry
     sun.target.position.set(cp.x, 0, cp.z);
     sun.target.updateMatrixWorld();
     sky.position.copy(camera.position);

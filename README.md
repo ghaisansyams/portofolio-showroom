@@ -1,7 +1,8 @@
 # DIECAST SHOWROOM
 
-Portofolio yang dikendarai. 31 proyek berdiri sebagai papan di halaman 3D —
-berkendaralah di antaranya, berhenti di depan salah satunya, dan baca detailnya.
+Portofolio yang dikendarai. Sebuah balai pamer yang sudah sepi, lampunya masih
+menyala, dan 31 proyek berdiri sebagai panel bercahaya — berkendaralah di
+antaranya, berhenti di depan salah satunya, dan baca detailnya.
 Sembilan karya unggulan punya 5–7 screenshot berlabel yang bisa ditelusuri;
 papannya sendiri berganti-ganti foto selama kamu berhenti di depannya.
 
@@ -27,21 +28,41 @@ Static site murni — tanpa build step, tanpa `npm install`.
 
 Di HP tombol sentuh muncul otomatis, termasuk tombol **Detail**.
 
+## Kenapa gelap
+
+Ini memakai mobil dan fisika yang sama dengan
+[Diecast Rally](https://github.com/ghaisansyams/diecast-rally), jadi keduanya
+sengaja dibuat berlawanan supaya tidak terbaca sebagai satu proyek yang sama
+di dalam grid portofolio:
+
+| | Diecast Rally | Diecast Showroom |
+| --- | --- | --- |
+| Waktu | golden hour | sesudah jam tutup |
+| Ruang | halaman berpasir terbuka | balai pamer tertutup |
+| Lantai | playmat bergaris | teraso gelap mengilap |
+| Cahaya | matahari rendah, bayangan panjang | rig langit-langit, bayangan pendek |
+| Mobil | mainan merah | show car putih mutiara |
+| Pembatas | bergaris merah-putih | dinding gelap dengan rel bercahaya |
+| Properti | tembok bata, kerucut, domino | tiang penanda berlampu |
+
+Karena ruangannya gelap, screenshot proyeknya jadi satu-satunya sumber warna
+terang — panelnya terbaca sebagai light box, bukan poster di siang hari.
+
 ## Tata letak
 
-Dua lingkaran sepusat dengan boulevard di antaranya:
+Dua lingkaran sepusat dengan lajur bercahaya di antaranya:
 
 ```
         lingkar luar r=70  —  22 eksperimen, menghadap ke DALAM
    ┌──────────────────────────────────────────┐
-   │   boulevard r=34..70  ← mobil di sini    │
+   │   lajur r=34..70  ← mobil di sini        │
    │   ┌──────────────────────────────────┐   │
    │   │  lingkar dalam r=34  —  9 karya  │   │
    │   │  unggulan, menghadap ke LUAR     │   │
    │   │        ▲ plaza + monumen         │   │
 ```
 
-Karena kedua lingkaran menghadap ke boulevard, berkendara memutar berarti karya
+Karena kedua lingkaran menghadap ke lajur, berkendara memutar berarti karya
 unggulan di satu sisi dan eksperimen di sisi lain. Papan lingkar luar diurutkan
 per kategori (3D & Creative → Games → Web) dengan rambu gerbang di tiap pergantian.
 
@@ -140,7 +161,15 @@ hampir seragam. Versi awal memakai bingkai lebih pendek dengan `object-fit:
 cover`, yang memotong bagian bawah tiap screenshot — hal terakhir yang pantas
 dilakukan portofolio pada karyanya sendiri.
 
-**Matahari diturunkan untuk bayangan golden-hour.** Sudut elevasinya sekitar
+**Image-based lighting dibuang setelah membuat lantai jadi putih total.**
+`PMREMGenerator.fromScene()` di atas kubah langit menghasilkan environment map
+yang membakar seluruh lantai — seluruh paruh bawah layar putih polos. Tanpa
+environment, `metalness` cuma membuat permukaan lebih gelap karena tidak ada
+yang bisa dipantulkan, jadi semua material sekarang nyaris dielektrik
+(`metalness` ≤ 0.08) dan kilapnya datang dari sorotan spekular lampu rig.
+
+**Matahari diturunkan untuk bayangan golden-hour** — catatan ini berlaku untuk
+versi halaman terbuka sebelumnya; sekarang lampunya justru dipasang curam. Sudut elevasinya sekitar
 24°, jadi bayangan memanjang menyapu aspal. Konsekuensinya cahaya yang jatuh di
 tanah datar berkurang separuh (`NdotL` 0.82 → 0.41), jadi intensitas matahari
 ikut dinaikkan supaya pasirnya tidak berubah keruh. Kotak shadow camera juga
