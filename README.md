@@ -1,4 +1,4 @@
-# DIECAST SHOWROOM
+# PORTOFOLIO SHOWROOM
 
 Portofolio yang dikendarai. Sebuah balai pamer yang sudah sepi, lampunya masih
 menyala, dan 31 proyek berdiri sebagai panel bercahaya — berkendaralah di
@@ -11,7 +11,7 @@ Datanya bukan salinan manual: ditarik langsung dari
 
 Static site murni — tanpa build step, tanpa `npm install`.
 
-![Diecast Showroom](preview.png)
+![Portofolio Showroom](preview.png)
 
 ## Main
 
@@ -35,7 +35,7 @@ Ini memakai mobil dan fisika yang sama dengan
 sengaja dibuat berlawanan supaya tidak terbaca sebagai satu proyek yang sama
 di dalam grid portofolio:
 
-| | Diecast Rally | Diecast Showroom |
+| | Diecast Rally | Portofolio Showroom |
 | --- | --- | --- |
 | Waktu | golden hour | sesudah jam tutup |
 | Ruang | halaman berpasir terbuka | balai pamer tertutup |
