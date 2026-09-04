@@ -15,7 +15,7 @@ Static site murni — tanpa build step, tanpa `npm install`.
 
 ## Main
 
-**[diecast-showroom.vercel.app](https://diecast-showroom.vercel.app)**
+**[ghaisanportofolio-showroom.vercel.app](https://ghaisanportofolio-showroom.vercel.app)**
 
 | Tombol | Fungsi |
 | --- | --- |
